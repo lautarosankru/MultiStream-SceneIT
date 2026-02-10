@@ -18,7 +18,7 @@ export function StreamOverlay({ isLocked, isDragging }: StreamOverlayProps) {
                 // It allows clicks to pass through only if we want to interact, but here we want to block iframes usually.
                 "bg-transparent",
                 // Optional visual cue when dragging
-                isDragging && "bg-indigo-500/10"
+                isDragging ? "bg-indigo-500/10" : null
             )}
         />
     )

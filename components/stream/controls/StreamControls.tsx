@@ -30,7 +30,7 @@ export function StreamControls({ item }: StreamControlsProps) {
                 : "opacity-0 group-hover:opacity-100 bg-black/40 rounded-bl-lg" // View Mode: Hover only
         )}>
             {/* Drag Handle - Only in Edit Mode */}
-            {!isLocked && <DragHandle />}
+            {!isLocked ? <DragHandle /> : null}
 
             {/* Mute - Always available (on hover or edit) */}
             <MuteButton
@@ -39,9 +39,9 @@ export function StreamControls({ item }: StreamControlsProps) {
             />
 
             {/* Remove - Only in Edit Mode */}
-            {!isLocked && (
+            {!isLocked ? (
                 <RemoveButton onRemove={() => removeItem(item.id)} />
-            )}
+            ) : null}
         </div>
     )
 }

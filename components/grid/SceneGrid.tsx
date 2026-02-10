@@ -35,7 +35,7 @@ export function SceneGrid() {
             ref={containerRef}
             className={cn(
                 "w-full min-h-screen p-4 pb-20 transition-colors duration-200",
-                !isLocked && "bg-white/[0.02]"
+                !isLocked ? "bg-white/[0.02]" : null
             )}
         >
             <Responsive
@@ -56,9 +56,9 @@ export function SceneGrid() {
                         )}
                     >
                         {/* Only show visual indicator in Edit Mode */}
-                        {!isLocked && (
+                        {!isLocked ? (
                             <span className="w-2.5 h-2.5 bg-indigo-500 rounded-sm opacity-80 hover:opacity-100 transition-opacity" />
-                        )}
+                        ) : null}
                     </span>
                 )}
                 onDragStart={() => setDragging(true)}
