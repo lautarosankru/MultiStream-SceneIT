@@ -73,6 +73,20 @@ function HomeContent() {
 
           <ShareButton />
 
+          <Button
+            variant="ghost"
+            size="icon"
+            onClick={() => {
+              const { autoLayout } = useSceneStore.getState()
+              autoLayout()
+              toast.success("Layout organizado")
+            }}
+            className="h-9 w-9 transition-colors hover:bg-white/10 text-slate-400"
+            title="Auto-organizar grilla"
+          >
+            <LayoutTemplate className="h-5 w-5" />
+          </Button>
+
           <div className="w-px h-6 bg-white/10 mx-1" />
 
           <Button

@@ -22,6 +22,7 @@ interface SceneState {
     toggleLock: () => void; // Replaces toggleEditMode
     setDragging: (isDragging: boolean) => void;
     setItems: (items: StreamItem[]) => void;
+    autoLayout: () => void;
 
     // Chat Actions
     setActiveChat: (id: string | null) => void;
@@ -128,6 +129,55 @@ export const useSceneStore = create<SceneState>()(
             setItems: (items: StreamItem[]) => {
                 set({ items })
             },
+
+            autoLayout: () => {
+                const items = get().items
+                if (items.length === 0) return
+
+                const COLS = 12
+                const TOTAL_ROWS = 24
+                let w = 12
+                let h = 24
+
+                if (items.length === 1) {
+                    w = 12;
+                    h = TOTAL_ROWS;
+                } else if (items.length === 2) {
+                    w = 6;
+                    h = TOTAL_ROWS;
+                } else if (items.length <= 4) {
+                    w = 6;
+                    h = TOTAL_ROWS / 2;
+                } else if (items.length <= 6) {
+                    w = 4;
+                    h = TOTAL_ROWS / 2;
+                } else if (items.length <= 9) {
+                    w = 4;
+                    h = TOTAL_ROWS / 3;
+                } else {
+                    w = 3;
+                    h = TOTAL_ROWS / 3;
+                }
+
+                const newItems = items.map((item, index) => {
+                    const row = Math.floor(index / (COLS / w))
+                    const col = index % (COLS / w)
+
+                    return {
+                        ...item,
+                        layout: {
+                            ...item.layout,
+                            x: col * w,
+                            y: row * h,
+                            w,
+                            h
+                        }
+                    }
+                })
+
+                set({ items: newItems })
+            },
+
 
             setActiveChat: (id: string | null) => {
                 set({ activeChatId: id, isSidebarOpen: true })

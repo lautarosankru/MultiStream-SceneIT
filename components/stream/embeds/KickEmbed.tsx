@@ -3,12 +3,12 @@
 import type { StreamItem } from "@/types/scene"
 
 export function KickEmbed({ item }: { item: StreamItem }) {
-    const src = `https://player.kick.com/${item.sourceId}?autoplay=true&muted=${item.isMuted}`
+    const src = `https://player.kick.com/${item.sourceId}?autoplay=true&muted=${item.isMuted}&quality=source`
 
     return (
         <iframe
             src={src}
-            className="w-full h-full border-none"
+            className="w-full h-full border-none bg-black"
             allowFullScreen
             scrolling="no"
             title={`Kick ${item.sourceId}`}
