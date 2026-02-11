@@ -1,36 +1,66 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# MultiStream-SceneIT 🎬
 
-## Getting Started
+**Tu centro de comando para streaming profesional.**
 
-First, run the development server:
+MultiStream-SceneIT es una plataforma de gestión de escenas y dashboards para streamers, permitiendo visualizar y organizar múltiples fuentes de video (Kick, Twitch, YouTube) y chats en un layout totalmente personalizable.
 
-```bash
-npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
-```
+## 🚀 Propuesta de Valor
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+- **Multi-Plataforma:** Integra streams de Kick, Twitch y YouTube en una sola pantalla.
+- **Layouts Flexibles:** Sistema de grilla (Drag & Drop) para organizar tu espacio de trabajo.
+- **Modo Cine/Edición:** Alterna entre configurar tu setup y disfrutar del contenido sin distracciones.
+- **Integración Nativa con Kick:** Autenticación OAuth y soporte para chat y stream.
+- **Persistencia Local:** Tu configuración se guarda automáticamente en tu navegador.
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+## 🛠 Tech Stack
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+- **Frontend:** [Next.js 16](https://nextjs.org/) (App Router), [React 19](https://react.dev/)
+- **Estilos:** [Tailwind CSS v4](https://tailwindcss.com/), [Radix UI](https://www.radix-ui.com/)
+- **Estado:** [Zustand](https://github.com/pmndrs/zustand) (con persistencia local)
+- **Grid System:** `react-grid-layout`
+- **Iconos:** Lucide React
 
-## Learn More
+## ⚡ Quick Start
 
-To learn more about Next.js, take a look at the following resources:
+### Prerrequisitos
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+- Node.js 18+
+- npm, pnpm o bun
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+### Instalación
 
-## Deploy on Vercel
+1.  **Clona el repositorio:**
+    ```bash
+    git clone https://github.com/lautarosankru/MultiStream-SceneIT.git
+    cd MultiStream-SceneIT
+    ```
 
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
+2.  **Instala las dependencias:**
+    ```bash
+    npm install
+    # o
+    pnpm install
+    ```
 
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+3.  **Configura las variables de entorno:**
+    Crea un archivo `.env.local` basado en el ejemplo:
+    ```bash
+    KICK_CLIENT_ID=tu_client_id
+    KICK_CLIENT_SECRET=tu_client_secret
+    NEXT_PUBLIC_APP_URL=http://localhost:3000
+    ```
+
+4.  **Inicia el servidor de desarrollo:**
+    ```bash
+    npm run dev
+    ```
+
+Visita [http://localhost:3000](http://localhost:3000) para empezar.
+
+## 📚 Documentación
+
+Para profundizar en la arquitectura y desarrollo:
+
+- [Arquitectura del Sistema](./ARCHITECTURE.md)
+- [Referencia de API](./API_REFERENCE.md)
+- [Guía de Desarrollo](./DEVELOPMENT.md)
