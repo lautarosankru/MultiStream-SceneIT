@@ -94,7 +94,7 @@ export function SceneGrid() {
                         )}
                     >
                         {!isLocked ? (
-                            <div className="m-2 w-5 h-5 flex items-center justify-center bg-primary rounded-full shadow-[0_0_15px_rgba(180,255,50,0.4)] group-hover:scale-110 group-active:scale-95 transition-all duration-300 border border-white/20">
+                            <div className="m-2 w-6 h-6 flex items-center justify-center glossy-btn rounded-full shadow-[0_0_15px_rgba(135,255,50,0.6)] group-hover:scale-110 group-active:scale-95 transition-all duration-300 border border-white/40">
                                 <svg
                                     viewBox="0 0 24 24"
                                     fill="none"
@@ -102,7 +102,7 @@ export function SceneGrid() {
                                     strokeWidth="3.5"
                                     strokeLinecap="round"
                                     strokeLinejoin="round"
-                                    className="w-2.5 h-2.5 text-primary-foreground"
+                                    className="w-3 h-3 text-white drop-shadow-md"
                                 >
                                     <path d="M15 19l4-4M10 19l9-9" />
                                 </svg>

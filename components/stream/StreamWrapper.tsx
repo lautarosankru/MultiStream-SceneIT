@@ -41,9 +41,11 @@ export const StreamWrapper = memo(function StreamWrapper({ item, style, classNam
             style={style}
             className={cn(
                 "relative w-full h-full overflow-hidden group bg-black shadow-2xl transition-all duration-300",
-                "glass linear-border rounded-[calc(var(--radius)-4px)]",
-                // Highlight border in edit mode
-                !isLocked && "ring-2 ring-primary/50 border-primary shadow-[0_0_30px_rgba(180,255,50,0.15)]",
+                "glass rounded-[var(--radius)]",
+                // Highlight border in edit mode with Frutiger Glow
+                !isLocked && "ring-4 ring-primary/30 border-primary shadow-[0_0_40px_rgba(135,255,235,0.3)] animate-pulse",
+                // Default state: Subtle liquid border
+                isLocked && "border border-white/10 hover:border-white/40 hover:shadow-[0_0_20px_rgba(255,255,255,0.1)]",
                 className
             )}
             onMouseDown={onMouseDown}
