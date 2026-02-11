@@ -63,7 +63,7 @@ export const useSceneStore = create<SceneState>()(
                     layout: {
                         i: id,
                         x: 0,
-                        y,
+                        y: y + 9 > 24 ? 0 : y, // Si excede el alto, lo ponemos arriba (el grid lo empujará si hay colisión)
                         w: 4, // ancho default (grid de 12 columnas)
                         h: 9, // altura default para video 16:9 aprox en grid
                         minW: 2,
@@ -163,14 +163,18 @@ export const useSceneStore = create<SceneState>()(
                     const row = Math.floor(index / (COLS / w))
                     const col = index % (COLS / w)
 
+                    const finalY = row * h;
+                    // Clamp h if it would exceed TOTAL_ROWS
+                    const finalH = (finalY + h > TOTAL_ROWS) ? (TOTAL_ROWS - finalY) : h;
+
                     return {
                         ...item,
                         layout: {
                             ...item.layout,
                             x: col * w,
-                            y: row * h,
+                            y: finalY,
                             w,
-                            h
+                            h: Math.max(2, finalH)
                         }
                     }
                 })

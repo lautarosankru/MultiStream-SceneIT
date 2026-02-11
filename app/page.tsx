@@ -39,14 +39,16 @@ function HomeContent() {
   }, [layoutParam, setItems, isLoaded])
 
   return (
-    <main className="h-screen w-full bg-[#0a0a0a] text-slate-200 flex flex-col overflow-hidden font-sans">
-      {/* Top Bar - Clean & Standard */}
-      <header className="h-14 flex items-center justify-between px-4 border-b border-white/10 bg-[#0E0E10] shrink-0 z-50">
+    <main className="h-screen w-full bg-background text-foreground flex flex-col overflow-hidden font-sans antialiased">
+      {/* Top Bar - Linear Style */}
+      <header className="h-14 flex items-center justify-between px-4 border-b border-white/5 bg-black/40 backdrop-blur-xl shrink-0 z-50 glossy-shine">
         {/* Left: Branding */}
-        <div className="flex items-center gap-2 w-48">
-          <LayoutTemplate className="h-5 w-5 text-indigo-500" />
+        <div className="flex items-center gap-2 w-48 group cursor-default">
+          <div className="h-8 w-8 rounded-lg bg-primary/20 flex items-center justify-center border border-primary/30 group-hover:glow-lime transition-all duration-300">
+            <LayoutTemplate className="h-4.5 w-4.5 text-primary" />
+          </div>
           <span className="font-bold text-lg text-white tracking-tight">
-            SceneIt
+            Scene<span className="text-primary italic">It</span>
           </span>
         </div>
 
@@ -63,8 +65,10 @@ function HomeContent() {
             size="sm"
             onClick={toggleLock}
             className={cn(
-              "h-9 px-3 gap-2 text-sm font-medium transition-colors",
-              !isLocked && "bg-indigo-600 text-white hover:bg-indigo-700"
+              "h-9 px-4 gap-2 text-sm font-semibold transition-all duration-300 rounded-full",
+              !isLocked
+                ? "bg-primary text-black hover:bg-primary/90 glow-lime"
+                : "text-slate-400 hover:text-white hover:bg-white/5"
             )}
           >
             <Edit2 className="h-4 w-4" />
@@ -81,21 +85,21 @@ function HomeContent() {
               autoLayout()
               toast.success("Layout organizado")
             }}
-            className="h-9 w-9 transition-colors hover:bg-white/10 text-slate-400"
+            className="h-9 w-9 transition-colors hover:bg-white/5 text-slate-400 hover:text-primary"
             title="Auto-organizar grilla"
           >
             <LayoutTemplate className="h-5 w-5" />
           </Button>
 
-          <div className="w-px h-6 bg-white/10 mx-1" />
+          <div className="w-px h-6 bg-white/5 mx-1" />
 
           <Button
             variant="ghost"
             size="icon"
             onClick={toggleSidebar}
             className={cn(
-              "h-9 w-9 transition-colors hover:bg-white/10",
-              isSidebarOpen ? "text-indigo-400" : "text-slate-400"
+              "h-9 w-9 transition-all duration-300 hover:bg-white/5",
+              isSidebarOpen ? "text-primary shadow-[0_0_10px_rgba(180,255,50,0.2)]" : "text-slate-400"
             )}
             title="Chat Sidebar"
           >
@@ -107,7 +111,7 @@ function HomeContent() {
       {/* Main Layout Area */}
       <div className="flex-1 flex overflow-hidden relative">
         {/* Grid Container */}
-        <div className="flex-1 overflow-hidden relative bg-[#0a0a0a]">
+        <div className="flex-1 overflow-hidden relative bg-background/50">
           {items.length === 0 ? (
             <div className="absolute inset-0 flex flex-col items-center justify-center p-8 select-none pointer-events-none">
               <div className="w-20 h-20 bg-white/5 rounded-2xl flex items-center justify-center mb-4 border border-white/5">

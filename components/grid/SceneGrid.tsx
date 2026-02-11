@@ -52,9 +52,15 @@ export function SceneGrid() {
 
     // Checking changes to layout store
     const onLayoutChange = useCallback((currentLayout: any, _allLayouts: any) => {
-        // Only update if not locked (though static items shouldn't move often)
+        // Only update if not locked
         if (!isLocked) {
-            updateLayout(currentLayout)
+            // Ensure data integrity before saving to store
+            const validatedLayout = currentLayout.map((item: any) => ({
+                ...item,
+                y: Math.min(item.y, TOTAL_ROWS - item.h),
+                h: Math.min(item.h, TOTAL_ROWS - item.y)
+            }));
+            updateLayout(validatedLayout)
         }
     }, [isLocked, updateLayout])
 
@@ -64,8 +70,8 @@ export function SceneGrid() {
         <div
             ref={containerRef}
             className={cn(
-                "w-full h-full p-4 transition-colors duration-200 overflow-hidden",
-                !isLocked ? "bg-white/[0.02]" : null
+                "w-full h-full p-4 transition-colors duration-500 overflow-hidden",
+                !isLocked ? "bg-white/[0.01]" : null
             )}
         >
             <Responsive
@@ -75,6 +81,7 @@ export function SceneGrid() {
                 breakpoints={{ lg: 1200, md: 996, sm: 768, xs: 480, xxs: 0 }}
                 cols={{ lg: 12, md: 10, sm: 6, xs: 4, xxs: 2 }}
                 rowHeight={rowHeight}
+                maxRows={TOTAL_ROWS}
                 // @ts-expect-error - draggableHandle is supported but types are missing it in ResponsiveProps
                 draggableHandle=".drag-handle"
                 resizeHandle={(axis: any, ref: React.Ref<HTMLElement>) => (
@@ -82,20 +89,20 @@ export function SceneGrid() {
                         ref={ref as any}
                         className={cn(
                             `react-resizable-handle react-resizable-handle-${axis} z-50`,
-                            "absolute bottom-0 right-0 w-10 h-10 flex items-end justify-end cursor-se-resize touch-none", // Huge hit area (40x40px)
+                            "absolute bottom-0 right-0 w-12 h-12 flex items-end justify-end cursor-se-resize touch-none",
                             "group"
                         )}
                     >
                         {!isLocked ? (
-                            <div className="m-1 w-6 h-6 flex items-center justify-center bg-indigo-600 rounded-tl-xl rounded-br-sm shadow-[0_0_15px_rgba(79,70,229,0.4)] group-hover:w-7 group-hover:h-7 group-active:scale-90 transition-all duration-200">
+                            <div className="m-2 w-5 h-5 flex items-center justify-center bg-primary rounded-full shadow-[0_0_15px_rgba(180,255,50,0.4)] group-hover:scale-110 group-active:scale-95 transition-all duration-300 border border-white/20">
                                 <svg
                                     viewBox="0 0 24 24"
                                     fill="none"
                                     stroke="currentColor"
-                                    strokeWidth="3"
+                                    strokeWidth="3.5"
                                     strokeLinecap="round"
                                     strokeLinejoin="round"
-                                    className="w-3 h-3 text-white"
+                                    className="w-2.5 h-2.5 text-primary-foreground"
                                 >
                                     <path d="M15 19l4-4M10 19l9-9" />
                                 </svg>
@@ -122,7 +129,9 @@ export function SceneGrid() {
                     // h = (realH + MARGIN) / (rowHeight + MARGIN)
                     const idealH = Math.round((idealRealH + MARGIN) / (rowHeight + MARGIN));
 
-                    newItem.h = Math.max(newItem.minH ?? 2, idealH);
+                    // CLAMP: Don't let it exceed TOTAL_ROWS - current Y
+                    const maxAvailableH = TOTAL_ROWS - newItem.y;
+                    newItem.h = Math.min(maxAvailableH, Math.max(newItem.minH ?? 2, idealH));
                 }}
                 onLayoutChange={onLayoutChange}
                 margin={[10, 10]}

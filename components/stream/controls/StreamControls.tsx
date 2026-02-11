@@ -23,11 +23,11 @@ export function StreamControls({ item }: StreamControlsProps) {
 
     return (
         <div className={cn(
-            "absolute top-0 right-0 z-50 flex items-center p-1 gap-1",
-            "transition-opacity duration-200",
+            "absolute top-0 right-0 z-50 flex items-center p-1.5 gap-1.5",
+            "transition-all duration-300",
             !isLocked
-                ? "opacity-100 bg-black/60 rounded-bl-lg backdrop-blur-sm" // Edit Mode: Always visible, solid background
-                : "opacity-0 group-hover:opacity-100 bg-black/40 rounded-bl-lg" // View Mode: Hover only
+                ? "opacity-100 glass-panel rounded-bl-xl shadow-lg" // Edit Mode: Always visible
+                : "opacity-0 group-hover:opacity-100 glass-panel rounded-bl-xl shadow-md" // View Mode: Hover only
         )}>
             {/* Drag Handle - Only in Edit Mode */}
             {!isLocked ? <DragHandle /> : null}

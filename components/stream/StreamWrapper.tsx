@@ -40,9 +40,10 @@ export const StreamWrapper = memo(function StreamWrapper({ item, style, classNam
         <div
             style={style}
             className={cn(
-                "relative w-full h-full overflow-hidden group bg-black shadow-lg",
+                "relative w-full h-full overflow-hidden group bg-black shadow-2xl transition-all duration-300",
+                "glass linear-border rounded-[calc(var(--radius)-4px)]",
                 // Highlight border in edit mode
-                !isLocked && "border border-indigo-500/50",
+                !isLocked && "ring-2 ring-primary/50 border-primary shadow-[0_0_30px_rgba(180,255,50,0.15)]",
                 className
             )}
             onMouseDown={onMouseDown}
