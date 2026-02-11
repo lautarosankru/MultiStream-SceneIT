@@ -7,24 +7,33 @@ interface ChatEmbedProps {
     item: StreamItem
 }
 
+import { useTheme } from "next-themes"
+
 export function ChatEmbed({ item }: ChatEmbedProps) {
     const [parent, setParent] = useState<string>("")
+    const { resolvedTheme } = useTheme()
+    // Force re-render when theme changes to update iframe URL
+    const [mounted, setMounted] = useState(false)
 
     useEffect(() => {
         if (typeof window !== "undefined") {
             setParent(window.location.hostname)
         }
+        setMounted(true)
     }, [])
 
-    if (!parent) return <div className="w-full h-full bg-slate-900 animate-pulse" />
+    if (!parent || !mounted) return <div className="w-full h-full bg-slate-900 animate-pulse" />
+
+    const isDark = resolvedTheme === 'dark'
 
     switch (item.platform) {
         case 'twitch':
             // Twitch Chat Embed
-            // https://dev.twitch.tv/docs/embed/chat/
-            const twitchSrc = `https://www.twitch.tv/embed/${item.sourceId}/chat?parent=${parent}&darkpopout`
+            // Add &darkpopout if dark mode
+            const twitchSrc = `https://www.twitch.tv/embed/${item.sourceId}/chat?parent=${parent}${isDark ? '&darkpopout' : ''}`
             return (
                 <iframe
+                    key={`twitch-${item.sourceId}-${resolvedTheme}`}
                     src={twitchSrc}
                     className="w-full h-full border-none"
                     title={`Twitch Chat ${item.sourceId}`}
@@ -32,29 +41,24 @@ export function ChatEmbed({ item }: ChatEmbedProps) {
             )
 
         case 'kick':
-            // Reverting to Iframe as Native Chat (Read-only) was rejected and Proxy failed.
-            // Using standard embed URL without strict sandbox to allow cookies/session sharing if possible.
-            // Many users report 'kick.com/CHANNEL/chatroom' works best for embeds.
+            // Kick Chat
             const kickSrc = `https://kick.com/${item.sourceId}/chatroom`
             return (
                 <iframe
                     src={kickSrc}
                     className="w-full h-full border-none"
                     title={`Kick Chat ${item.sourceId}`}
-                    // ENABLE LOGIN and COOKIES:
-                    // allow-popups: required for Google/Apple login windows
-                    // allow-popups-to-escape-sandbox: vital for login redirects
-                    // allow-storage-access-by-user-activation: allows requesting cookie access
                     sandbox="allow-scripts allow-same-origin allow-forms allow-popups allow-popups-to-escape-sandbox allow-storage-access-by-user-activation"
                 />
             )
 
         case 'youtube':
             // YouTube Live Chat
-            // Need domain for parent if using embed
-            const ytSrc = `https://www.youtube.com/live_chat?v=${item.sourceId}&embed_domain=${parent}&dark_theme=1`
+            // Add &dark_theme=1 if dark mode
+            const ytSrc = `https://www.youtube.com/live_chat?v=${item.sourceId}&embed_domain=${parent}${isDark ? '&dark_theme=1' : ''}`
             return (
                 <iframe
+                    key={`yt-${item.sourceId}-${resolvedTheme}`}
                     src={ytSrc}
                     className="w-full h-full border-none"
                     title={`YouTube Chat ${item.sourceId}`}

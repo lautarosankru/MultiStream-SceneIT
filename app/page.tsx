@@ -11,6 +11,7 @@ import { useSceneStore } from "@/store/useSceneStore"
 import { decompressLayout } from "@/lib/compression" // Use new decompression
 import { toast } from "sonner"
 import { Button } from "@/components/ui/button"
+import { ThemeToggle } from "@/components/ui/ThemeToggle"
 import { LayoutTemplate, PanelRightOpen, PanelRightClose, Edit2 } from "lucide-react"
 import { cn } from "@/lib/utils"
 
@@ -39,16 +40,16 @@ function HomeContent() {
   }, [layoutParam, setItems, isLoaded])
 
   return (
-    <main className="h-screen w-full bg-background text-foreground flex flex-col overflow-hidden font-sans antialiased">
-      {/* Top Bar - Linear Style */}
-      <header className="h-14 flex items-center justify-between px-4 border-b border-white/5 bg-black/40 backdrop-blur-xl shrink-0 z-50 glossy-shine">
+    <main className="h-screen w-full bg-background text-foreground flex flex-col overflow-hidden font-sans antialiased selection:bg-primary/30">
+      {/* Top Bar - Frutiger Aero Glass */}
+      <header className="h-16 flex items-center justify-between px-6 border-b border-white/50 dark:border-white/5 bg-gradient-to-b from-white/70 to-white/40 dark:from-black/80 dark:to-black/60 backdrop-blur-md shrink-0 z-50 shadow-sm">
         {/* Left: Branding */}
-        <div className="flex items-center gap-2 w-48 group cursor-default">
-          <div className="h-8 w-8 rounded-lg bg-primary/20 flex items-center justify-center border border-primary/30 group-hover:glow-lime transition-all duration-300">
-            <LayoutTemplate className="h-4.5 w-4.5 text-primary" />
+        <div className="flex items-center gap-3 w-48 group cursor-default">
+          <div className="h-9 w-9 rounded-xl bg-gradient-to-br from-cyan-400 to-lime-400 flex items-center justify-center shadow-lg group-hover:scale-105 transition-all duration-300 ring-2 ring-white/50">
+            <LayoutTemplate className="h-5 w-5 text-white" />
           </div>
-          <span className="font-bold text-lg text-white tracking-tight">
-            Scene<span className="text-primary italic">It</span>
+          <span className="font-bold text-xl text-blue-900 dark:text-white tracking-tight drop-shadow-sm">
+            Scene<span className="text-transparent bg-clip-text bg-gradient-to-r from-cyan-600 to-lime-600 dark:from-cyan-400 dark:to-lime-400 italic">It</span>
           </span>
         </div>
 
@@ -58,7 +59,7 @@ function HomeContent() {
         </div>
 
         {/* Right: Actions */}
-        <div className="flex items-center gap-2 w-48 justify-end">
+        <div className="flex items-center gap-3 w-48 justify-end">
           <KickConnectButton />
           <Button
             variant={!isLocked ? "secondary" : "ghost"}
@@ -67,8 +68,8 @@ function HomeContent() {
             className={cn(
               "h-9 px-4 gap-2 text-sm font-semibold transition-all duration-300 rounded-full",
               !isLocked
-                ? "bg-primary text-black hover:bg-primary/90 glow-lime"
-                : "text-slate-400 hover:text-white hover:bg-white/5"
+                ? "glossy-btn text-white ring-2 ring-white/50"
+                : "text-slate-600 hover:text-blue-900 hover:bg-white/40"
             )}
           >
             <Edit2 className="h-4 w-4" />
@@ -85,21 +86,23 @@ function HomeContent() {
               autoLayout()
               toast.success("Layout organizado")
             }}
-            className="h-9 w-9 transition-colors hover:bg-white/5 text-slate-400 hover:text-primary"
+            className="h-9 w-9 transition-colors hover:bg-white/40 text-slate-600 hover:text-blue-900 rounded-full"
             title="Auto-organizar grilla"
           >
             <LayoutTemplate className="h-5 w-5" />
           </Button>
 
-          <div className="w-px h-6 bg-white/5 mx-1" />
+          <div className="w-px h-6 bg-slate-200 mx-1" />
+
+          <ThemeToggle />
 
           <Button
             variant="ghost"
             size="icon"
             onClick={toggleSidebar}
             className={cn(
-              "h-9 w-9 transition-all duration-300 hover:bg-white/5",
-              isSidebarOpen ? "text-primary shadow-[0_0_10px_rgba(180,255,50,0.2)]" : "text-slate-400"
+              "h-9 w-9 transition-all duration-300 hover:bg-white/40 rounded-full",
+              isSidebarOpen ? "text-cyan-600 shadow-[0_0_15px_rgba(0,255,255,0.4)] bg-white/50" : "text-slate-600 dark:text-slate-400"
             )}
             title="Chat Sidebar"
           >
@@ -111,14 +114,14 @@ function HomeContent() {
       {/* Main Layout Area */}
       <div className="flex-1 flex overflow-hidden relative">
         {/* Grid Container */}
-        <div className="flex-1 overflow-hidden relative bg-background/50">
+        <div className="flex-1 overflow-hidden relative">
           {items.length === 0 ? (
             <div className="absolute inset-0 flex flex-col items-center justify-center p-8 select-none pointer-events-none">
-              <div className="w-20 h-20 bg-white/5 rounded-2xl flex items-center justify-center mb-4 border border-white/5">
-                <LayoutTemplate className="h-10 w-10 text-white/20" />
+              <div className="w-24 h-24 bg-white/10 rounded-3xl flex items-center justify-center mb-6 border border-white/20 shadow-[0_8px_32px_rgba(0,0,0,0.1)] backdrop-blur-sm">
+                <LayoutTemplate className="h-12 w-12 text-white/40" />
               </div>
-              <h2 className="text-xl font-medium text-white mb-2">Lienzo Vacío</h2>
-              <p className="text-slate-500 text-sm">
+              <h2 className="text-2xl font-semibold text-white mb-2 drop-shadow-md">Lienzo Vacío</h2>
+              <p className="text-white/60 text-base">
                 Agrega streams para comenzar.
               </p>
             </div>
@@ -134,9 +137,12 @@ function HomeContent() {
   )
 }
 
+import { LiquidBackground } from "@/components/ui/LiquidBackground"
+
 export default function Home() {
   return (
-    <Suspense fallback={<div className="min-h-screen bg-slate-950" />}>
+    <Suspense fallback={<div className="min-h-screen bg-background animate-pulse" />}>
+      <LiquidBackground />
       <HomeContent />
     </Suspense>
   )
