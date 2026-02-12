@@ -38,10 +38,10 @@ export function ChatSidebar() {
         <motion.div
             initial={{ opacity: 0, x: 20 }}
             animate={{ opacity: 1, x: 0 }}
-            className="w-96 h-screen flex flex-col shrink-0 transition-all duration-300 glass border-l border-white/20 shadow-2xl z-50"
+            className="w-96 h-screen flex flex-col shrink-0 transition-all duration-300 glass dark:bg-black dark:backdrop-blur-none border-l border-white/20 dark:border-white/5 shadow-2xl z-50"
         >
             {/* Glossy Header */}
-            <div className="h-12 flex items-center px-2 gap-2 bg-gradient-to-b from-white/60 to-white/30 dark:from-black/80 dark:to-black/60 border-b border-white/50 dark:border-white/5 backdrop-blur-md shadow-sm">
+            <div className="h-12 flex items-center px-2 gap-2 bg-gradient-to-b from-white/60 to-white/30 dark:bg-black border-b border-white/50 dark:border-white/5 backdrop-blur-md shadow-sm">
                 <div className="flex-1 flex gap-1 overflow-x-auto no-scrollbar mask-linear py-1">
                     {items.map((item) => (
                         <button
@@ -81,7 +81,7 @@ export function ChatSidebar() {
             </div>
 
             {/* Chat Content */}
-            <div className="flex-1 bg-black/10 relative overflow-hidden backdrop-blur-sm">
+            <div className="flex-1 bg-black/10 dark:bg-black/80 relative overflow-hidden backdrop-blur-sm">
                 {activeItem ? (
                     <div className="w-full h-full" key={`${activeItem.id}-${reloadKey}`}>
                         <ChatEmbed item={activeItem} />

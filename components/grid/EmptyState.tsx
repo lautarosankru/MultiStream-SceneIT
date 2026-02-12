@@ -31,8 +31,8 @@ export function EmptyState() {
                         }}
                         className="w-32 h-32 rounded-[2.5rem] bg-gradient-to-br from-white/80 to-white/40 dark:from-white/10 dark:to-white/5 backdrop-blur-xl border border-white/50 dark:border-white/10 shadow-[0_20px_50px_rgba(0,0,0,0.1)] flex items-center justify-center relative z-20 overflow-hidden"
                     >
-                        {/* Inner Shine */}
-                        <div className="absolute inset-0 bg-gradient-to-tr from-transparent via-white/30 to-transparent -translate-x-full group-hover:translate-x-full transition-transform duration-1000 ease-in-out pointer-events-none" />
+                        {/* Inner Shine - Even softer and slower */}
+                        <div className="absolute inset-0 bg-gradient-to-tr from-transparent via-white/5 to-transparent -translate-x-full group-hover:translate-x-full transition-transform duration-2000 ease-in-out pointer-events-none" />
 
                         <LayoutTemplate className="h-16 w-16 text-blue-900/40 dark:text-cyan-400/50" />
 
@@ -63,7 +63,7 @@ export function EmptyState() {
                         className="text-4xl md:text-5xl font-extrabold tracking-tight"
                     >
                         <span className="text-slate-900 dark:text-white">Lienzo </span>
-                        <span className="text-transparent bg-clip-text bg-gradient-to-r from-cyan-600 to-lime-600 dark:from-cyan-400 dark:to-lime-400 italic">Vacío</span>
+                        <span className="text-transparent bg-clip-text bg-gradient-to-r from-cyan-600 to-lime-600 dark:from-cyan-400 dark:to-lime-400 italic pr-2">Vacío</span>
                     </motion.h2>
 
                     <motion.p
