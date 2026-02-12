@@ -1,5 +1,6 @@
 "use client"
 
+import { useState, useEffect } from "react"
 import type { StreamItem } from "@/types/scene"
 
 export function YouTubeEmbed({ item }: { item: StreamItem }) {
