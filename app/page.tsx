@@ -14,18 +14,18 @@ import { Button } from "@/components/ui/button"
 import { ThemeToggle } from "@/components/ui/ThemeToggle"
 import { LayoutTemplate, PanelRightOpen, PanelRightClose, Edit2 } from "lucide-react"
 import { cn } from "@/lib/utils"
+import { EmptyState } from "@/components/grid/EmptyState"
+import { LiquidBackground } from "@/components/ui/LiquidBackground"
 
 function HomeContent() {
   const searchParams = useSearchParams()
-  const layoutParam = searchParams.get("layout") // This will now expect LZString
-  // We check legacy support potentially or just overwrite
+  const layoutParam = searchParams.get("layout")
   const { setItems, items, isLocked, toggleLock, isSidebarOpen, toggleSidebar } = useSceneStore()
   const [isLoaded, setIsLoaded] = useState(false)
 
   // Handle Import from URL
   useEffect(() => {
     if (layoutParam && !isLoaded) {
-      // Try decompression first
       try {
         const importedItems = decompressLayout(layoutParam)
         if (importedItems && importedItems.length > 0) {
@@ -113,31 +113,18 @@ function HomeContent() {
 
       {/* Main Layout Area */}
       <div className="flex-1 flex overflow-hidden relative">
-        {/* Grid Container */}
         <div className="flex-1 overflow-hidden relative">
           {items.length === 0 ? (
-            <div className="absolute inset-0 flex flex-col items-center justify-center p-8 select-none pointer-events-none">
-              <div className="w-24 h-24 bg-white/10 rounded-3xl flex items-center justify-center mb-6 border border-white/20 shadow-[0_8px_32px_rgba(0,0,0,0.1)] backdrop-blur-sm">
-                <LayoutTemplate className="h-12 w-12 text-white/40" />
-              </div>
-              <h2 className="text-2xl font-semibold text-white mb-2 drop-shadow-md">Lienzo Vacío</h2>
-              <p className="text-white/60 text-base">
-                Agrega streams para comenzar.
-              </p>
-            </div>
+            <EmptyState />
           ) : (
             <SceneGrid />
           )}
         </div>
-
-        {/* Sidebar */}
         <ChatSidebar />
       </div>
     </main>
   )
 }
-
-import { LiquidBackground } from "@/components/ui/LiquidBackground"
 
 export default function Home() {
   return (
