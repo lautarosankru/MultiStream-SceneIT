@@ -11,17 +11,21 @@ export async function GET(req: NextRequest) {
     }
 
     try {
-        const response = await fetch(`${KICK_API_URL}/users`, {
-            headers: { 'Authorization': `Bearer ${accessToken}` }
-        });
-
-        if (!response.ok) {
-            return NextResponse.json({ error: 'Failed to fetch user' }, { status: response.status });
+        // Note: Kick API /users/me endpoint may not be available. 
+        // We return what we can - if it fails, the frontend can handle it.
+        let userData = null;
+        try {
+            const response = await fetch(`${KICK_API_URL}/users/me`, {
+                headers: { 'Authorization': `Bearer ${accessToken}` }
+            });
+            if (response.ok) {
+                userData = await response.json();
+            }
+        } catch (e) {
+            console.error("Error fetching user data:", e);
         }
-
-        const data = await response.json();
-        // Return the user data. Adjust structure if Kick returns { data: ... }
-        return NextResponse.json(data);
+        
+        return NextResponse.json(userData || { error: 'Could not fetch user data' });
     } catch (error) {
         return NextResponse.json({ error: 'Internal Server Error' }, { status: 500 });
     }

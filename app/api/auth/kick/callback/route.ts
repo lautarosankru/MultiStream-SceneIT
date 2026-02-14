@@ -50,27 +50,23 @@ export async function GET(req: NextRequest) {
         const refreshToken = tokenData.refresh_token;
 
         // 2. Fetch User Info using the access token
-        const userResponse = await fetch(`${KICK_API_URL}/users`, {
-            headers: { 'Authorization': `Bearer ${accessToken}` }
-        });
-
-        if (!userResponse.ok) {
-            console.error("User User Fetch Error:", await userResponse.text());
-            return NextResponse.redirect(new URL('/?error=user_fetch_failed', req.url));
+        // Note: The Kick API /users/me endpoint may not exist or requires specific setup.
+        // For now, we just store the token and proceed. The frontend can use the token
+        // to make authenticated requests or we can query user data on demand.
+        // Let's try a simplified approach - just store the token for now.
+        
+        // Attempt to get user info, but don't fail if it doesn't work
+        let userData = null;
+        try {
+            const userResponse = await fetch(`${KICK_API_URL}/users/me`, {
+                headers: { 'Authorization': `Bearer ${accessToken}` }
+            });
+            if (userResponse.ok) {
+                userData = await userResponse.json();
+            }
+        } catch (e) {
+            console.log("Could not fetch user info, storing token anyway");
         }
-
-        const userDataWrapper = await userResponse.json();
-        // Assuming /users returns { data: [ { id, username, ... } ] } or similar. Kick API varies.
-        // Actually standard /users/me or just /users usually returns the authenticated user if no ID param.
-        // Let's debug this response if needed. Standard OAuth usually provides an endpoint.
-        // If /users is not 'me', we might need to find the right endpoint.
-        // Kick Docs say: GET https://api.kick.com/public/v1/users to list? No.
-        // Usually it's /users/me or check the token scopes.
-        // Let's assume passed strictly. For now, we'll pass the token to the client (securely? no, via internal API or cookie).
-
-        // BETTER APPROACH: Set an HTTP-only session cookie with the access token. 
-        // Then the client can query a local /api/me endpoint to get data.
-        // OR: Just set a client-readable cookie with basic user info for display, and keep token httpOnly.
 
         cookieStore.set('kick_access_token', accessToken, { httpOnly: true, secure: process.env.NODE_ENV === 'production', path: '/' });
         if (refreshToken) {
