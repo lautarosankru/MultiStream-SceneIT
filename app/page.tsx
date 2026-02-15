@@ -35,7 +35,7 @@ function HomeContent() {
   const searchParams = useSearchParams()
   const pathname = usePathname()
   const layoutParam = searchParams.get("layout")
-  const streamersParam = searchParams.get("streamers")
+  const usernamesParam = searchParams.get("s") // usernames: ?s=coscu,coker&p=kick,twitch
   const { setItems, items, isLocked, toggleLock, isSidebarOpen, toggleSidebar, sidebarWidth, setSidebarWidth } = useSceneStore()
   const [isLoaded, setIsLoaded] = useState(false)
   const [isLoadingStreamers, setIsLoadingStreamers] = useState(false)
@@ -45,7 +45,7 @@ function HomeContent() {
   useEffect(() => {
     const loadFromFriendlyUrl = async () => {
       // Skip if we have streamers param (new system)
-      if (streamersParam) return
+      if (usernamesParam) return
       
       // Parse path segments (skip empty and leading slash)
       const pathSegments = pathname.split('/').filter(s => s && s.length > 0)
@@ -158,16 +158,21 @@ function HomeContent() {
     }
   }, [layoutParam, setItems, isLoaded])
 
-  // Handle ?streamers=coscu,coker,goncho (backward compatibility with [...slug] redirects)
+  // Handle ?s=coscu,coker&p=kick,twitch (from [...slug] friendly URLs)
   useEffect(() => {
     const loadFromStreamersParam = async () => {
-      if (!streamersParam || isLoaded) return
+      if (!usernamesParam || isLoaded) return
       
-      console.log('[SceneIt] Loading from streamers param:', streamersParam)
+      console.log('[SceneIt] Loading from streamers param:', usernamesParam)
       setIsLoadingStreamers(true)
       
       try {
-        const usernames = streamersParam.split(',').filter(s => s.length > 0)
+        const usernames = usernamesParam.split(',').filter(s => s.length > 0)
+        
+        // Get platforms from &p= param
+        const platformParam = searchParams.get("p")
+        const platforms = platformParam ? platformParam.split(',').filter(s => s.length > 0) : []
+        
         if (usernames.length === 0) {
           setIsLoadingStreamers(false)
           return
@@ -175,13 +180,16 @@ function HomeContent() {
 
         setValidationProgress(`Validando ${usernames.length} streamer(s)...`)
         
-        // Asumir que todos son kick por ahora (el [...slug] pasa solo usernames)
+        // Build streamers array with explicit platforms
+        const streamersToValidate = usernames.map((username, index) => ({
+          platform: platforms[index] || 'kick', // Default to kick if no platform specified
+          username
+        }))
+        
         const response = await fetch('/api/streamers/batch', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ 
-            streamers: usernames.map(username => ({ platform: 'kick', username }))
-          })
+          body: JSON.stringify({ streamers: streamersToValidate })
         })
 
         if (!response.ok) {
@@ -243,7 +251,7 @@ function HomeContent() {
     }
 
     loadFromStreamersParam()
-  }, [streamersParam, isLoaded, setItems])
+  }, [usernamesParam, isLoaded, setItems, searchParams])
 
   return (
     <main className="h-screen w-full bg-background text-foreground flex flex-col overflow-hidden font-sans antialiased selection:bg-primary/30">

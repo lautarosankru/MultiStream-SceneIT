@@ -3,14 +3,29 @@ import { redirect } from 'next/navigation'
 export default async function SlugPage({ params }: { params: Promise<{ slug: string[] }> }) {
   const { slug } = await params
   
-  // Si no hay slug, ir a home
   if (!slug || slug.length === 0) {
     redirect('/')
   }
   
-  // Convertir /kick/coscu/twitch/coker a ?streamers=kick,coscu,twitch,coker
-  // Esto evita el loop infinito porque usa query params
-  const streamersParam = slug.join(',')
+  // Formato: /kick/coscu/twitch/coker -> ?s=coscu,coker&p=kick,twitch
+  const streamers: string[] = []
+  const platforms: string[] = []
   
-  redirect(`/?streamers=${streamersParam}`)
+  // Parsear: [platform, username, platform, username, ...]
+  for (let i = 0; i < slug.length; i += 2) {
+    const platform = slug[i]?.toLowerCase()
+    const username = slug[i + 1]
+    
+    if (platform && username && ['kick', 'twitch', 'youtube'].includes(platform)) {
+      platforms.push(platform)
+      streamers.push(username)
+    }
+  }
+  
+  if (streamers.length === 0) {
+    redirect('/')
+  }
+  
+  // Formato claro: ?s=usernames&p=platforms
+  redirect(`/?s=${streamers.join(',')}&p=${platforms.join(',')}`)
 }
