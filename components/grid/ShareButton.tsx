@@ -1,8 +1,9 @@
 "use client"
 
-import { useState } from "react"
+import { useState, useMemo } from "react"
 import { useSceneStore } from "@/store/useSceneStore"
 import { compressLayout } from "@/lib/compression"
+import { generateFriendlyUrl } from "@/lib/streamers"
 import { Button } from "@/components/ui/button"
 import { Share2, Check, Copy } from "lucide-react"
 import { toast } from "sonner"
@@ -12,18 +13,52 @@ export function ShareButton() {
     const items = useSceneStore((state) => state.items)
     const [copied, setCopied] = useState(false)
 
+    // Generate friendly URL from current items
+    const friendlyUrl = useMemo(() => {
+        if (items.length === 0) return null
+        
+        // Only generate friendly URL if all items are supported platforms
+        const supportedItems = items.filter(item => 
+            ['kick', 'twitch', 'youtube'].includes(item.platform)
+        )
+        
+        if (supportedItems.length !== items.length) {
+            return null // Some items are custom, use compressed URL instead
+        }
+
+        const streamers = supportedItems.map(item => ({
+            platform: item.platform,
+            username: item.sourceId
+        }))
+
+        return generateFriendlyUrl(streamers)
+    }, [items])
+
     const handleShare = () => {
         if (items.length === 0) {
             toast.error("Agrega streams antes de compartir")
             return
         }
 
-        const layoutString = compressLayout(items)
-        const url = `${window.location.origin}?layout=${layoutString}`
+        let url: string
+
+        if (friendlyUrl) {
+            // Use friendly URL (e.g., /kick/coscu/twitch/coker)
+            url = `${window.location.origin}${friendlyUrl}`
+        } else {
+            // Fallback to compressed layout
+            const layoutString = compressLayout(items)
+            url = `${window.location.origin}?layout=${layoutString}`
+        }
 
         navigator.clipboard.writeText(url)
         setCopied(true)
-        toast.success("Link copiado al portapapeles")
+        
+        if (friendlyUrl) {
+            toast.success("URL amigable copiada")
+        } else {
+            toast.success("Link copiado al portapapeles")
+        }
 
         setTimeout(() => setCopied(false), 2000)
     }
@@ -31,14 +66,12 @@ export function ShareButton() {
     return (
         <Button
             variant="ghost"
-            size="sm" // Smaller size for header
+            size="sm"
             onClick={handleShare}
             className={cn(
                 "h-8 px-2 text-slate-400 hover:text-white transition-colors",
-                // If we want it to look like a Pill:
-                // "bg-white/5 hover:bg-white/10 rounded-full"
             )}
-            title="Compartir Layout"
+            title={friendlyUrl ? "Compartir URL amigable" : "Compartir Layout"}
         >
             {copied ? <Check className="h-4 w-4 text-green-400" /> : <Share2 className="h-4 w-4" />}
         </Button>

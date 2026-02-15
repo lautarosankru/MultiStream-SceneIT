@@ -1,29 +1,137 @@
 "use client"
 
 import { useEffect, useState, Suspense } from "react"
-import { useSearchParams } from "next/navigation"
+import { useSearchParams, usePathname } from "next/navigation"
 import { SceneGrid } from "@/components/grid/SceneGrid"
 import { AddStream } from "@/components/grid/AddStream"
 import { ShareButton } from "@/components/grid/ShareButton"
 import { ChatSidebar } from "@/components/chat/ChatSidebar"
 import { KickConnectButton } from "@/components/kick/KickConnectButton"
 import { useSceneStore } from "@/store/useSceneStore"
-import { decompressLayout } from "@/lib/compression" // Use new decompression
+import { decompressLayout } from "@/lib/compression"
+import { parseSlugs } from "@/lib/streamers"
 import { toast } from "sonner"
 import { Button } from "@/components/ui/button"
 import { ThemeToggle } from "@/components/ui/ThemeToggle"
-import { LayoutTemplate, PanelRightOpen, PanelRightClose, Edit2 } from "lucide-react"
+import { LayoutTemplate, PanelRightOpen, PanelRightClose, Edit2, Loader2 } from "lucide-react"
 import { cn } from "@/lib/utils"
 import { EmptyState } from "@/components/grid/EmptyState"
 import { LiquidBackground } from "@/components/ui/LiquidBackground"
+import { StreamItem } from "@/types/scene"
+
+interface ValidationResult {
+  platform: string
+  username: string
+  valid: boolean
+  isLive?: boolean
+  avatar?: string | null
+  displayName?: string
+  error?: string
+}
 
 function HomeContent() {
   const searchParams = useSearchParams()
+  const pathname = usePathname()
   const layoutParam = searchParams.get("layout")
   const { setItems, items, isLocked, toggleLock, isSidebarOpen, toggleSidebar } = useSceneStore()
   const [isLoaded, setIsLoaded] = useState(false)
+  const [isLoadingStreamers, setIsLoadingStreamers] = useState(false)
+  const [validationProgress, setValidationProgress] = useState<string | null>(null)
 
-  // Handle Import from URL
+  // Handle friendly URL (e.g., /coscu/coker/goncho)
+  useEffect(() => {
+    const loadFromFriendlyUrl = async () => {
+      // Parse path segments (skip empty and leading slash)
+      const pathSegments = pathname.split('/').filter(s => s && s.length > 0)
+      
+      if (pathSegments.length > 0 && !layoutParam && !isLoaded) {
+        console.log('[SceneIt] Loading from friendly URL:', pathSegments)
+        setIsLoadingStreamers(true)
+        
+        try {
+          const parsedStreamers = parseSlugs(pathSegments)
+          console.log('[SceneIt] Parsed streamers:', parsedStreamers)
+          
+          if (parsedStreamers.length === 0) {
+            setIsLoadingStreamers(false)
+            return
+          }
+
+          // Validate streamers via API
+          setValidationProgress(`Validando ${parsedStreamers.length} streamer(s)...`)
+          
+          const response = await fetch('/api/streamers/batch', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ 
+              streamers: parsedStreamers.map(s => ({ platform: s.platform, username: s.username }))
+            })
+          })
+
+          if (!response.ok) {
+            throw new Error('Validation failed')
+          }
+
+          const { results } = await response.json()
+          const validResults = results.filter((r: ValidationResult) => r.valid)
+          
+          console.log('[SceneIt] Validation results:', results)
+
+          if (validResults.length === 0) {
+            toast.error("Ningún streamer encontrado")
+            setIsLoadingStreamers(false)
+            setValidationProgress(null)
+            return
+          }
+
+          // Report invalid streamers
+          const invalidResults = results.filter((r: ValidationResult) => !r.valid)
+          if (invalidResults.length > 0) {
+            invalidResults.forEach((r: ValidationResult) => {
+              toast.error(`"${r.username}" no encontrado en ${r.platform}`)
+            })
+          }
+
+          // Convert to StreamItems
+          const streamItems: StreamItem[] = validResults.map((result: ValidationResult, index: number) => {
+            const cols = Math.ceil(Math.sqrt(validResults.length))
+            const rows = Math.ceil(validResults.length / cols)
+            
+            return {
+              id: `stream-${Date.now()}-${index}`,
+              type: 'video' as const,
+              platform: result.platform as 'kick' | 'twitch' | 'youtube',
+              sourceId: result.username,
+              isMuted: index !== 0, // Mute all except first
+              layout: {
+                i: `stream-${Date.now()}-${index}`,
+                x: (index % cols) * (12 / cols),
+                y: Math.floor(index / cols) * (12 / rows),
+                w: Math.floor(12 / cols),
+                h: Math.floor(12 / rows),
+                minW: 3,
+                minH: 3
+              }
+            }
+          })
+
+          setItems(streamItems)
+          toast.success(`${validResults.length} stream(s) cargado(s)`)
+          
+        } catch (error) {
+          console.error('[SceneIt] Error loading from friendly URL:', error)
+          toast.error("Error al cargar los streams")
+        } finally {
+          setIsLoadingStreamers(false)
+          setValidationProgress(null)
+        }
+      }
+    }
+
+    loadFromFriendlyUrl()
+  }, [pathname, layoutParam, setItems, isLoaded])
+
+  // Handle Import from URL (compressed layout)
   useEffect(() => {
     if (layoutParam && !isLoaded) {
       try {
@@ -35,6 +143,8 @@ function HomeContent() {
       } catch {
         console.error("Failed to decompress")
       }
+      setIsLoaded(true)
+    } else if (!layoutParam) {
       setIsLoaded(true)
     }
   }, [layoutParam, setItems, isLoaded])
@@ -114,7 +224,20 @@ function HomeContent() {
       {/* Main Layout Area */}
       <div className="flex-1 flex overflow-hidden relative">
         <div className="flex-1 overflow-hidden relative">
-          {items.length === 0 ? (
+          {/* Loading State for Friendly URLs */}
+          {isLoadingStreamers ? (
+            <div className="h-full flex flex-col items-center justify-center gap-4">
+              <Loader2 className="h-12 w-12 animate-spin text-cyan-500" />
+              <div className="text-center">
+                <p className="text-lg font-semibold text-slate-700 dark:text-slate-300">
+                  Cargando streams
+                </p>
+                {validationProgress && (
+                  <p className="text-sm text-slate-500">{validationProgress}</p>
+                )}
+              </div>
+            </div>
+          ) : items.length === 0 ? (
             <EmptyState />
           ) : (
             <SceneGrid />
