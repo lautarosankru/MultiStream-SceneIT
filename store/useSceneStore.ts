@@ -275,8 +275,11 @@ export const useSceneStore = create<SceneState>()(
                 // Total rows = secondary items + 1 for main stream (at least 24)
                 const TOTAL_ROWS = Math.max(24, (secondaryCount + 1) * 6) // 6 rows per item
 
-                // Main stream: 8 columns (66%), full height
-                const MAIN_W = 8
+                // Main stream: full width at top
+                const MAIN_H = 16 // Fixed height for main stream (roughly 60% of default 24)
+                
+                // Each secondary item gets equal height, filling remaining space
+                const secH = Math.floor((TOTAL_ROWS - MAIN_H) / secondaryCount)
                 
                 const newItems = items.map((item, index) => {
                     const isMain = item.id === actualMainId
@@ -288,29 +291,27 @@ export const useSceneStore = create<SceneState>()(
                                 ...item.layout,
                                 x: 0,
                                 y: 0,
-                                w: MAIN_W,
-                                h: TOTAL_ROWS
+                                w: 12,
+                                h: MAIN_H
                             }
                         }
                     }
 
-                    // Secondary items: distribute in the remaining 4 columns
+                    // Secondary items: distribute in the remaining space below main
                     const secondaryItems = items.filter(i => i.id !== actualMainId)
                     const secondaryIndex = secondaryItems.findIndex(i => i.id === item.id)
                     
-                    const secW = SECONDARY_COLS
-                    const secH = Math.floor(TOTAL_ROWS / secondaryCount)
-
-                    // Stack secondary items vertically (one per row, each gets full width of secondary area)
-                    const secRow = secondaryIndex
-                    const secX = MAIN_W // All secondary items go to the right of main stream
+                    // Grid layout for secondary: 2 columns, distribute evenly
+                    const secW = 6 // Half of 12 columns
+                    const secCol = secondaryIndex % 2
+                    const secRow = Math.floor(secondaryIndex / 2)
 
                     return {
                         ...item,
                         layout: {
                             ...item.layout,
-                            x: secX,
-                            y: secRow * secH,
+                            x: secCol * secW,
+                            y: MAIN_H + (secRow * secH),
                             w: secW,
                             h: secH
                         }
