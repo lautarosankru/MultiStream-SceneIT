@@ -38,11 +38,11 @@ export function SceneGrid() {
     // Calculate dynamic maxRows based on spotlight layout
     // In spotlight mode with many secondary items, we may need more than 24 rows
     const maxRows = useMemo(() => {
-        if (layoutMode !== 'spotlight' || items.length === 0) {
+        if (items.length === 0) {
             return BASE_ROWS;
         }
         
-        // In spotlight, calculate the max Y + H from all items
+        // Calculate the max Y + H from all items
         const maxYH = items.reduce((max, item) => {
             const itemBottom = item.layout.y + item.layout.h;
             return Math.max(max, itemBottom);
@@ -50,8 +50,10 @@ export function SceneGrid() {
         
         // Add some buffer and ensure minimum of BASE_ROWS
         return Math.max(BASE_ROWS, maxYH);
-    }, [layoutMode, items]);
+    }, [items]);
 
+    // rowHeight is calculated to fit BASE_ROWS (24) in the container
+    // This ensures consistent sizing regardless of actual maxRows
     const rowHeight = useMemo(() => {
         if (!containerHeight) return 30;
         const availableHeight = containerHeight - PADDING_Y - ((BASE_ROWS - 1) * MARGIN_Y);
@@ -102,9 +104,10 @@ export function SceneGrid() {
         <div
             ref={containerRef}
             className={cn(
-                "w-full h-full p-4 transition-colors duration-500 overflow-hidden",
+                "w-full h-full p-4 transition-colors duration-500",
                 !isLocked ? "bg-white/[0.01]" : null
             )}
+            style={{ overflowY: maxRows > BASE_ROWS ? 'auto' : 'hidden' }}
         >
             <Responsive
                 className="layout"
