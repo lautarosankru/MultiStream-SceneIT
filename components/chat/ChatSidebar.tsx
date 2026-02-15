@@ -5,8 +5,11 @@ import { ChatEmbed } from "./embeds/ChatEmbed"
 import { cn } from "@/lib/utils"
 import { Button } from "@/components/ui/button"
 import { MessageSquare, RefreshCw } from "lucide-react"
-import { useEffect, useState } from "react"
+import { useEffect, useState, useCallback, useRef } from "react"
 import { motion } from "framer-motion"
+
+const MIN_SIDEBAR_WIDTH = 280
+const MAX_SIDEBAR_WIDTH = 800
 
 export function ChatSidebar() {
     const {
@@ -14,8 +17,52 @@ export function ChatSidebar() {
         activeChatId,
         setActiveChat,
         isSidebarOpen,
-        sidebarWidth
+        sidebarWidth,
+        setSidebarWidth
     } = useSceneStore()
+
+    // Resize handling
+    const isResizing = useRef(false)
+    const startX = useRef(0)
+    const startWidth = useRef(0)
+    const [isDragging, setIsDragging] = useState(false)
+
+    const startResize = useCallback((e: React.MouseEvent) => {
+        isResizing.current = true
+        startX.current = e.clientX
+        startWidth.current = sidebarWidth
+        setIsDragging(true)
+        e.preventDefault()
+    }, [sidebarWidth])
+
+    const handleMouseMove = useCallback((e: MouseEvent) => {
+        if (!isResizing.current) return
+
+        const deltaX = e.clientX - startX.current
+        const newWidth = Math.min(MAX_SIDEBAR_WIDTH, Math.max(MIN_SIDEBAR_WIDTH, startWidth.current + deltaX))
+        setSidebarWidth(newWidth)
+    }, [setSidebarWidth])
+
+    const stopResize = useCallback(() => {
+        isResizing.current = false
+        setIsDragging(false)
+    }, [])
+
+    useEffect(() => {
+        if (isDragging) {
+            window.addEventListener('mousemove', handleMouseMove)
+            window.addEventListener('mouseup', stopResize)
+            document.body.style.cursor = 'col-resize'
+            document.body.style.userSelect = 'none'
+        }
+
+        return () => {
+            window.removeEventListener('mousemove', handleMouseMove)
+            window.removeEventListener('mouseup', stopResize)
+            document.body.style.cursor = ''
+            document.body.style.userSelect = ''
+        }
+    }, [isDragging, handleMouseMove, stopResize])
 
     // Force reload of active chat logic
     const [reloadKey, setReloadKey] = useState(0)
@@ -39,9 +86,24 @@ export function ChatSidebar() {
         <motion.div
             initial={{ opacity: 0, x: 20 }}
             animate={{ opacity: 1, x: 0 }}
-            className="h-full flex flex-col shrink-0 transition-all duration-300 glass dark:bg-black dark:backdrop-blur-none border-l border-white/20 dark:border-white/5 shadow-2xl z-50"
+            className="h-full flex flex-col shrink-0 transition-all duration-300 glass dark:bg-black dark:backdrop-blur-none border-l border-white/20 dark:border-white/5 shadow-2xl z-50 relative"
             style={{ width: sidebarWidth }}
         >
+            {/* Resize Handle - Left Edge */}
+            <div
+                className={cn(
+                    "absolute left-0 top-0 h-full w-1.5 cursor-col-resize z-10 transition-colors duration-200",
+                    isDragging 
+                        ? "bg-cyan-400" 
+                        : "bg-transparent hover:bg-cyan-400/50"
+                )}
+                onMouseDown={startResize}
+            />
+            
+            {/* Resize Guide Line */}
+            {isDragging && (
+                <div className="absolute left-0 top-0 h-full w-px bg-cyan-400/30 pointer-events-none z-20" />
+            )}
             {/* Glossy Header */}
             <div className="h-12 flex items-center px-2 gap-2 bg-gradient-to-b from-white/60 to-white/30 dark:bg-black border-b border-white/50 dark:border-white/5 backdrop-blur-md shadow-sm">
                 <div className="flex-1 flex gap-1 overflow-x-auto no-scrollbar mask-linear py-1">

@@ -273,20 +273,27 @@ export const useSceneStore = create<SceneState>()(
 
                 // Calculate number of secondary items
                 const secondaryCount = items.length - 1
-
-                // Calculate secondary grid dimensions dynamically based on count
-                // Secondary grid has 4 columns on the right
-                const SECONDARY_COLS = 4
+                const TOTAL_ROWS = 24
                 
-                // Each secondary item gets its own row, dividing the height evenly
-                // Total rows = secondary items + 1 for main stream (at least 24)
-                const TOTAL_ROWS = Math.max(24, (secondaryCount + 1) * 6) // 6 rows per item
-
-                // Main stream: full width at top
-                const MAIN_H = 16 // Fixed height for main stream (roughly 60% of default 24)
+                // Dynamic columns based on secondary count to avoid too wide/short items
+                // 1-2: 1-2 cols (wide), 3-4: 2 cols, 5-6: 3 cols, 7+: 4 cols
+                const getSecondaryCols = (count: number) => {
+                    if (count <= 1) return count
+                    if (count <= 4) return 2
+                    if (count <= 6) return 3
+                    return 4
+                }
                 
-                // Each secondary item gets equal height, filling remaining space
-                const secH = Math.floor((TOTAL_ROWS - MAIN_H) / secondaryCount)
+                const secondaryCols = getSecondaryCols(secondaryCount)
+                const secW = Math.floor(12 / secondaryCols) // Width per secondary item
+                const secPerCol = Math.ceil(secondaryCount / secondaryCols) // Items per column (for height calc)
+                
+                // Main stream: 60% of height (~14 rows)
+                const MAIN_H = Math.round(TOTAL_ROWS * 0.6)
+                
+                // Secondary height: divide remaining space by items per column
+                // This ensures they fill vertically regardless of column count
+                const secH = Math.floor((TOTAL_ROWS - MAIN_H) / secPerCol)
                 
                 const newItems = items.map((item, index) => {
                     const isMain = item.id === actualMainId
@@ -304,21 +311,20 @@ export const useSceneStore = create<SceneState>()(
                         }
                     }
 
-                    // Secondary items: distribute in the remaining space below main
+                    // Secondary items: distribute in grid below main
                     const secondaryItems = items.filter(i => i.id !== actualMainId)
                     const secondaryIndex = secondaryItems.findIndex(i => i.id === item.id)
                     
-                    // Grid layout for secondary: 2 columns, distribute evenly
-                    const secW = 6 // Half of 12 columns
-                    const secCol = secondaryIndex % 2
-                    const secRow = Math.floor(secondaryIndex / 2)
+                    // Calculate grid position
+                    const col = secondaryIndex % secondaryCols
+                    const row = Math.floor(secondaryIndex / secondaryCols)
 
                     return {
                         ...item,
                         layout: {
                             ...item.layout,
-                            x: secCol * secW,
-                            y: MAIN_H + (secRow * secH),
+                            x: col * secW,
+                            y: MAIN_H + (row * secH),
                             w: secW,
                             h: secH
                         }
