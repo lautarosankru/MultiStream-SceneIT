@@ -1,15 +1,10 @@
 import { useEffect, useState, useRef } from 'react';
-import Pusher from 'pusher-js';
 import { KickChatMessage } from '@/types/kick';
-
-// Common public key for Kick (ensure this is up to date or extract dynamically if needed)
-const KICK_PUSHER_KEY = '32d8ec338341c29d6025';
-const KICK_PUSHER_CLUSTER = 'us2';
 
 export function useKickChat(channelSlug: string) {
     const [messages, setMessages] = useState<KickChatMessage[]>([]);
     const [status, setStatus] = useState<'connecting' | 'connected' | 'error'>('connecting');
-    const pusherRef = useRef<Pusher | null>(null);
+    const eventSourceRef = useRef<EventSource | null>(null);
 
     useEffect(() => {
         let mounted = true;
@@ -25,55 +20,72 @@ export function useKickChat(channelSlug: string) {
 
                 if (!chatroomId) throw new Error('Chatroom ID not found');
 
-                // 2. Connect to Pusher
-                if (!pusherRef.current) {
-                    pusherRef.current = new Pusher(KICK_PUSHER_KEY, {
-                        cluster: KICK_PUSHER_CLUSTER,
-                        wsHost: 'ws-us2.pusher.com', // Explicit host sometimes helps
-                        wsPort: 80,
-                        wssPort: 443,
-                        forceTLS: true,
-                        disableStats: true,
-                        enabledTransports: ['ws', 'wss'],
-                    });
+                // 2. Connect to SSE
+                if (eventSourceRef.current) {
+                    eventSourceRef.current.close();
                 }
 
-                const channelName = `chatrooms.${chatroomId}.v2`;
-                const channel = pusherRef.current.subscribe(channelName);
+                const sseUrl = `/api/stream/sse/${chatroomId}`;
+                console.log(`Connecting to SSE: ${sseUrl}`);
 
-                channel.bind('App\\Events\\ChatMessageEvent', (data: any) => {
-                    if (mounted) {
-                        // Transform if necessary, but usually data structure matches closely
+                const evtSource = new EventSource(sseUrl);
+                eventSourceRef.current = evtSource;
+
+                evtSource.onopen = () => {
+                    if (mounted) setStatus('connected');
+                    console.log("SSE Connected");
+                };
+
+                evtSource.onmessage = (event) => {
+                    if (!mounted) return;
+                    try {
+                        const payload = JSON.parse(event.data);
+                        // Kick payload structure might vary slightly, but generally 'content', 'sender', etc.
+                        // We map it to our type if needed.
                         const newMessage: KickChatMessage = {
-                            id: data.id,
-                            chatroom_id: data.chatroom_id,
-                            content: data.content,
-                            type: data.type,
-                            created_at: data.created_at,
-                            sender: data.sender
+                            id: payload.id || crypto.randomUUID(),
+                            chatroom_id: payload.chatroom_id,
+                            content: payload.content,
+                            type: payload.type || 'message',
+                            created_at: payload.created_at || new Date().toISOString(),
+                            sender: payload.sender || { username: 'Unknown', slug: 'unknown' }
                         };
-                        setMessages(prev => [...prev.slice(-199), newMessage]); // Keep last 200
-                    }
-                });
 
-                setStatus('connected');
+                        setMessages(prev => {
+                            // Deduplicate based on ID if possible
+                            if (prev.some(m => m.id === newMessage.id)) return prev;
+                            return [...prev.slice(-199), newMessage];
+                        });
+                    } catch (e) {
+                        console.error("Error parsing SSE message", e);
+                    }
+                };
+
+                evtSource.onerror = (err) => {
+                    console.error("SSE Error:", err);
+                    if (mounted) setStatus('error');
+                    // EventSource auto-reconnects, but we might want to manually retry if it fails hard
+                };
 
             } catch (err) {
-                console.error("Kick Chat Error:", err);
+                console.error("Kick Chat Setup Error:", err);
                 if (mounted) setStatus('error');
             }
         };
 
-        connect();
+        if (channelSlug) {
+            connect();
+        }
 
         return () => {
             mounted = false;
-            if (pusherRef.current) {
-                pusherRef.current.disconnect();
-                pusherRef.current = null;
+            if (eventSourceRef.current) {
+                eventSourceRef.current.close();
+                eventSourceRef.current = null;
             }
         };
     }, [channelSlug]);
 
     return { messages, status };
 }
+

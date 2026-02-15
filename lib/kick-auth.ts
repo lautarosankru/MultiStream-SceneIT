@@ -34,3 +34,69 @@ function base64URLEncode(str: Buffer): string {
         .replace(/\//g, '_')
         .replace(/=+$/, '');
 }
+
+// --- Server-Side Only Helpers ---
+
+let appAccessToken: string | null = null;
+let tokenExpiry: number | null = null;
+
+export async function getAppAccessToken(): Promise<string> {
+    // Return cached token if valid
+    if (appAccessToken && tokenExpiry && Date.now() < tokenExpiry) {
+        return appAccessToken;
+    }
+
+    try {
+        const res = await fetch(KICK_TOKEN_URL, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/x-www-form-urlencoded',
+            },
+            body: new URLSearchParams({
+                grant_type: 'client_credentials',
+                client_id: KICK_CLIENT_ID,
+                client_secret: KICK_CLIENT_SECRET,
+
+            }),
+        });
+
+        if (!res.ok) {
+            const errorText = await res.text();
+            throw new Error(`Failed to get Kick app token: ${res.status} ${errorText}`);
+        }
+
+        const data = await res.json();
+        appAccessToken = data.access_token;
+        // Expires in is usually in seconds. Subtract a buffer (e.g. 60s) just in case.
+        tokenExpiry = Date.now() + (data.expires_in * 1000) - 60000;
+
+        return appAccessToken!;
+    } catch (error) {
+        console.error('Error fetching Kick app token:', error);
+        throw error;
+    }
+}
+
+export async function fetchKickAPI(endpoint: string, options: RequestInit = {}) {
+    const token = await getAppAccessToken();
+
+    const url = endpoint.startsWith('http') ? endpoint : `${KICK_API_URL}${endpoint.startsWith('/') ? '' : '/'}${endpoint}`;
+
+    const res = await fetch(url, {
+        ...options,
+        headers: {
+            ...options.headers,
+            'Authorization': `Bearer ${token}`,
+            'Accept': 'application/json',
+        },
+    });
+
+    if (res.status === 401) {
+        // Token might have expired unexpectedly, retry once could be implemented here
+        // For now, just invalidate cache so next request tries to get a new one
+        appAccessToken = null;
+        tokenExpiry = null;
+    }
+
+    return res;
+}
