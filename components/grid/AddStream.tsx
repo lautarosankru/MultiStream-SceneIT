@@ -29,7 +29,7 @@ export function AddStream() {
                 placeholder="Twitch, YouTube, Kick URL..."
                 value={url}
                 onChange={(e) => setUrl(e.target.value)}
-                className="bg-white/5 border-white/10 text-white placeholder:text-white/30 focus-visible:ring-primary/50"
+                className="bg-black/5 dark:bg-white/10 border-black/10 dark:border-white/10 text-slate-900 dark:text-white placeholder:text-slate-500 dark:placeholder:text-white/30 focus-visible:ring-primary/50"
             />
             <Button type="submit" variant="default" className="gap-2 bg-primary text-black hover:bg-primary/90 rounded-full px-4 font-semibold">
                 <Plus className="w-4 h-4" />
