@@ -8,7 +8,7 @@ import "react-grid-layout/css/styles.css"
 import "react-resizable/css/styles.css"
 
 export function SceneGrid() {
-    const { items, updateLayout, isLocked, setDragging } = useSceneStore()
+    const { items, updateLayout, isLocked, setDragging, layoutMode, mainStreamId, spotlightLayout, autoLayout } = useSceneStore()
     const { width, containerRef, mounted } = useContainerWidth();
     const [containerHeight, setContainerHeight] = useState(0);
 
@@ -42,13 +42,27 @@ export function SceneGrid() {
     }, [containerHeight]);
 
     // Memoize layout to prevent unnecessary re-renders
-    const layouts = useMemo(() => ({
-        lg: items.map(item => ({
-            ...item.layout,
-            i: item.id,
-            static: isLocked // Standard RGL way to lock items
-        }))
-    }), [items, isLocked])
+    const layouts = useMemo(() => {
+        // If in spotlight mode, recalculate layout
+        if (layoutMode === 'spotlight') {
+            return {
+                lg: items.map(item => ({
+                    ...item.layout,
+                    i: item.id,
+                    static: isLocked
+                }))
+            }
+        }
+        
+        // Auto mode: use the stored layout from items
+        return {
+            lg: items.map(item => ({
+                ...item.layout,
+                i: item.id,
+                static: isLocked // Standard RGL way to lock items
+            }))
+        }
+    }, [items, isLocked, layoutMode, mainStreamId])
 
     // Checking changes to layout store
     const onLayoutChange = useCallback((currentLayout: any, _allLayouts: any) => {

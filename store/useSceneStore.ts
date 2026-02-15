@@ -1,14 +1,18 @@
 import { create } from 'zustand'
 import { persist } from 'zustand/middleware'
 import { generateId, parseStreamUrl } from '@/lib/utils'
-import { StreamItem, StreamLayout, ItemType, StreamPlatform } from '@/types/scene'
+import { StreamItem, StreamLayout, ItemType, StreamPlatform, LayoutMode } from '@/types/scene'
 import { KickUser } from '@/types/kick'
 
 interface SceneState {
     items: StreamItem[];
-    isLocked: boolean; // Replaces isEditMode. If true: "Cinema Mode" (no controls). If false: "Edit Mode" (grid, handles).
-    isDragging: boolean; // Para activar overlay en iframes
-    backgroundId: string; // Para personalización futura
+    isLocked: boolean;
+    isDragging: boolean;
+    backgroundId: string;
+
+    // Layout Mode State
+    layoutMode: LayoutMode;
+    mainStreamId: string | null;
 
     // Chat State
     activeChatId: string | null;
@@ -19,10 +23,15 @@ interface SceneState {
     removeItem: (id: string) => void;
     updateLayout: (layout: StreamLayout[]) => void;
     toggleMute: (id: string) => void;
-    toggleLock: () => void; // Replaces toggleEditMode
+    toggleLock: () => void;
     setDragging: (isDragging: boolean) => void;
     setItems: (items: StreamItem[]) => void;
     autoLayout: () => void;
+
+    // Layout Mode Actions
+    setLayoutMode: (mode: LayoutMode) => void;
+    setMainStream: (id: string | null) => void;
+    spotlightLayout: () => void;
 
     // Chat Actions
     setActiveChat: (id: string | null) => void;
@@ -38,11 +47,15 @@ export const useSceneStore = create<SceneState>()(
     persist(
         (set, get) => ({
             items: [],
-            isLocked: false, // Default to unlocked (Edit Mode) so users can arrange first
+            isLocked: false,
             isDragging: false,
             backgroundId: 'default',
             activeChatId: null,
             isSidebarOpen: true,
+
+            // Layout Mode State
+            layoutMode: 'auto',
+            mainStreamId: null,
 
             addItem: (url: string, type: ItemType = 'video') => {
                 const { platform, sourceId } = parseStreamUrl(url)
@@ -191,12 +204,129 @@ export const useSceneStore = create<SceneState>()(
                 set((state) => ({ isSidebarOpen: !state.isSidebarOpen }))
             },
 
+            // Layout Mode Actions
+            setLayoutMode: (mode: LayoutMode) => {
+                set({ layoutMode: mode })
+                // If switching to spotlight, ensure we have a main stream
+                if (mode === 'spotlight') {
+                    const { mainStreamId, items } = get()
+                    if (!mainStreamId && items.length > 0) {
+                        set({ mainStreamId: items[0].id })
+                    }
+                }
+            },
+
+            setMainStream: (id: string | null) => {
+                const { items, layoutMode } = get()
+                // Verify the id exists in items
+                if (id && !items.find(i => i.id === id)) {
+                    return
+                }
+                set({ mainStreamId: id })
+                // Auto-switch to spotlight mode if setting a main stream
+                if (id && layoutMode !== 'spotlight') {
+                    set({ layoutMode: 'spotlight' })
+                }
+            },
+
+            spotlightLayout: () => {
+                const items = get().items
+                if (items.length === 0) return
+
+                const { mainStreamId } = get()
+                const COLS = 12
+                const TOTAL_ROWS = 24
+
+                // Determine main stream: use mainStreamId or default to first item
+                const mainId = mainStreamId || items[0].id
+                const mainItemIndex = items.findIndex(i => i.id === mainId)
+                
+                // If mainStreamId doesn't exist in items, reset to first item
+                const actualMainIndex = mainItemIndex === -1 ? 0 : mainItemIndex
+                const actualMainId = items[actualMainIndex].id
+
+                // Update mainStreamId to the actual one we're using
+                set({ mainStreamId: actualMainId, layoutMode: 'spotlight' })
+
+                // If only 1 item, full screen
+                if (items.length === 1) {
+                    const newItems = items.map((item, index) => ({
+                        ...item,
+                        layout: {
+                            ...item.layout,
+                            x: 0,
+                            y: 0,
+                            w: 12,
+                            h: 24
+                        }
+                    }))
+                    set({ items: newItems })
+                    return
+                }
+
+                // Main stream: 8 columns (66%), full height
+                // Secondary grid: 4 columns on right, distributed
+                const MAIN_W = 8
+                const SECONDARY_COLS = 4
+                
+                const newItems = items.map((item, index) => {
+                    // Find the index of this item relative to the main stream
+                    // We need to sort items so main stream is first, then others
+                    const isMain = item.id === actualMainId
+                    
+                    if (isMain) {
+                        return {
+                            ...item,
+                            layout: {
+                                ...item.layout,
+                                x: 0,
+                                y: 0,
+                                w: MAIN_W,
+                                h: TOTAL_ROWS
+                            }
+                        }
+                    }
+
+                    // Secondary items: distribute in the remaining 4 columns
+                    // Get secondary items (excluding main)
+                    const secondaryItems = items.filter(i => i.id !== actualMainId)
+                    const secondaryIndex = secondaryItems.findIndex(i => i.id === item.id)
+                    
+                    // 2 rows in secondary grid
+                    const secondaryRows = 2
+                    const secW = SECONDARY_COLS
+                    const secH = TOTAL_ROWS / secondaryRows
+
+                    const secCol = secondaryIndex % 2
+                    const secRow = Math.floor(secondaryIndex / 2)
+
+                    return {
+                        ...item,
+                        layout: {
+                            ...item.layout,
+                            x: MAIN_W + (secCol * secW),
+                            y: secRow * secH,
+                            w: secW,
+                            h: secH
+                        }
+                    }
+                })
+
+                set({ items: newItems })
+            },
+
             kickUser: null,
             setKickUser: (user: KickUser | null) => set({ kickUser: user }),
         }),
         {
             name: 'scene-storage',
-            // partialize: (state) => ({ items: state.items, backgroundId: state.backgroundId }), // Optional: persist specific fields
+            partialize: (state) => ({ 
+                items: state.items, 
+                layoutMode: state.layoutMode,
+                mainStreamId: state.mainStreamId,
+                backgroundId: state.backgroundId,
+                isLocked: state.isLocked,
+            }),
         }
     )
 )

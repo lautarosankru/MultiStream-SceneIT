@@ -19,7 +19,9 @@ interface StreamWrapperProps {
 }
 
 export const StreamWrapper = memo(function StreamWrapper({ item, style, className, onMouseDown, onMouseUp, onTouchEnd, ...props }: StreamWrapperProps) {
-    const { isLocked, isDragging } = useSceneStore()
+    const { isLocked, isDragging, layoutMode, mainStreamId, setMainStream } = useSceneStore()
+    
+    const isMain = layoutMode === 'spotlight' && mainStreamId === item.id
 
     // Determine which embed to render
     const renderEmbed = () => {
@@ -55,6 +57,24 @@ export const StreamWrapper = memo(function StreamWrapper({ item, style, classNam
         >
             {/* Controls Layer */}
             <StreamControls item={item} />
+
+            {/* MAIN Indicator for Spotlight Mode */}
+            {layoutMode === 'spotlight' && (
+                <div 
+                    className={cn(
+                        "absolute top-2 left-2 z-50 px-2 py-1 rounded-md text-xs font-bold transition-all duration-300 cursor-pointer",
+                        isMain 
+                            ? "bg-amber-500 text-white shadow-lg scale-100" 
+                            : "bg-black/50 text-white/70 opacity-0 group-hover:opacity-100 hover:bg-amber-500/70 hover:text-white"
+                    )}
+                    onClick={(e) => {
+                        e.stopPropagation();
+                        setMainStream(item.id);
+                    }}
+                >
+                    {isMain ? "★ MAIN" : "Set as main"}
+                </div>
+            )}
 
             {/* Interaction Blocking Overlay for Edit Mode */}
             <StreamOverlay isLocked={isLocked} isDragging={isDragging} />

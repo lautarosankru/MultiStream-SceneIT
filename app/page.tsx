@@ -19,6 +19,7 @@ import { EmptyState } from "@/components/grid/EmptyState"
 import { LiquidBackground } from "@/components/ui/LiquidBackground"
 import { TotalViewers } from "@/components/ui/TotalViewers"
 import { StreamItem } from "@/types/scene"
+import { LayoutModeToggle } from "@/components/grid/LayoutModeToggle"
 
 interface ValidationResult {
   platform: string
@@ -278,6 +279,8 @@ function HomeContent() {
           </Button>
 
           <ShareButton />
+
+          <LayoutModeToggle />
 
           <Button
             variant="ghost"
