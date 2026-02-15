@@ -332,6 +332,8 @@ export const useSceneStore = create<SceneState>()(
                 backgroundId: state.backgroundId,
                 isLocked: state.isLocked,
                 sidebarWidth: state.sidebarWidth,
+                // Persistir datos básicos del usuario de Kick para mostrar UI mientras carga sesión
+                kickUser: state.kickUser,
             }),
         }
     )

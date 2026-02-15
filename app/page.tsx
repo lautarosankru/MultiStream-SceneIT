@@ -36,7 +36,7 @@ function HomeContent() {
   const pathname = usePathname()
   const layoutParam = searchParams.get("layout")
   const usernamesParam = searchParams.get("s") // usernames: ?s=coscu,coker&p=kick,twitch
-  const { setItems, items, isLocked, toggleLock, isSidebarOpen, toggleSidebar, sidebarWidth, setSidebarWidth } = useSceneStore()
+  const { setItems, items, isLocked, toggleLock, isSidebarOpen, toggleSidebar, sidebarWidth, setSidebarWidth, kickUser } = useSceneStore()
   const [isLoaded, setIsLoaded] = useState(false)
   const [isLoadingStreamers, setIsLoadingStreamers] = useState(false)
   const [validationProgress, setValidationProgress] = useState<string | null>(null)
@@ -173,6 +173,8 @@ function HomeContent() {
         const platformParam = searchParams.get("p")
         const platforms = platformParam ? platformParam.split(',').filter(s => s.length > 0) : []
         
+        console.log('[SceneIt] Parsed params:', { usernames, platforms })
+        
         if (usernames.length === 0) {
           setIsLoadingStreamers(false)
           return
@@ -185,6 +187,8 @@ function HomeContent() {
           platform: platforms[index] || 'kick', // Default to kick if no platform specified
           username
         }))
+        
+        console.log('[SceneIt] Streamers to validate:', streamersToValidate)
         
         const response = await fetch('/api/streamers/batch', {
           method: 'POST',
@@ -256,25 +260,34 @@ function HomeContent() {
   return (
     <main className="h-screen w-full bg-background text-foreground flex flex-col overflow-hidden font-sans antialiased selection:bg-primary/30">
       {/* Top Bar - Frutiger Aero Glass */}
-      <header className="h-16 flex items-center justify-between px-6 border-b border-white/50 dark:border-white/5 bg-gradient-to-b from-white/70 to-white/40 dark:from-black/80 dark:to-black/60 backdrop-blur-md shrink-0 z-50 shadow-sm">
+      <header className="h-16 flex items-center justify-between px-4 lg:px-6 border-b border-white/50 dark:border-white/5 bg-gradient-to-b from-white/70 to-white/40 dark:from-black/80 dark:to-black/60 backdrop-blur-md shrink-0 z-50 shadow-sm">
         {/* Left: Branding */}
-        <div className="flex items-center gap-3 w-auto lg:w-48 group cursor-default shrink-0">
+        <div className="flex items-center gap-2 w-auto lg:w-40 group cursor-default shrink-0">
           <div className="h-9 w-9 rounded-xl bg-gradient-to-br from-cyan-400 to-lime-400 flex items-center justify-center shadow-lg group-hover:scale-105 transition-all duration-300 ring-2 ring-white/50">
             <LayoutTemplate className="h-5 w-5 text-white" />
           </div>
-          <span className="font-bold text-xl text-blue-900 dark:text-white tracking-tight drop-shadow-sm hidden md:inline">
+          <span className="font-bold text-lg text-blue-900 dark:text-white tracking-tight drop-shadow-sm hidden sm:inline">
             Scene<span className="text-transparent bg-clip-text bg-gradient-to-r from-cyan-600 to-lime-600 dark:from-cyan-400 dark:to-lime-400 italic">It</span>
           </span>
           <TotalViewers />
         </div>
 
-        {/* Center: Controls */}
-        <div className="flex-1 max-w-2xl mx-auto flex items-center justify-center">
+        {/* Center: Controls + Kick User */}
+        <div className="flex-1 flex items-center justify-center gap-2 mx-2">
+          {/* Mostrar usuario conectado si existe */}
+          {kickUser && (
+            <div className="hidden md:flex items-center gap-1 px-2 py-1 rounded-full bg-[#53FC18]/10 border border-[#53FC18]/30">
+              <div className="w-5 h-5 rounded-full bg-[#53FC18] flex items-center justify-center shrink-0">
+                <span className="text-[10px] font-bold text-black">K</span>
+              </div>
+              <span className="text-xs font-medium text-[#53FC18] truncate max-w-[80px]">{kickUser.username}</span>
+            </div>
+          )}
           <AddStream />
         </div>
 
         {/* Right: Actions */}
-        <div className="flex items-center gap-2 lg:gap-3 w-auto lg:w-48 justify-end shrink-0">
+        <div className="flex items-center gap-1 lg:gap-2 w-auto lg:w-44 justify-end shrink-0">
           <KickConnectButton />
           <Button
             variant={!isLocked ? "secondary" : "ghost"}
