@@ -43,7 +43,8 @@ export function ShareButton() {
         let url: string
 
         if (friendlyUrl) {
-            // Use friendly URL (e.g., /kick/coscu/twitch/coker)
+            // Friendly URL format: /kick/coscu/twitch/coker
+            // This goes through [...slug] which redirects to ?streamers=
             url = `${window.location.origin}${friendlyUrl}`
         } else {
             // Fallback to compressed layout
@@ -55,7 +56,7 @@ export function ShareButton() {
         setCopied(true)
         
         if (friendlyUrl) {
-            toast.success("URL amigable copiada")
+            toast.success("Link copiado")
         } else {
             toast.success("Link copiado al portapapeles")
         }
