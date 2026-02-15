@@ -235,7 +235,7 @@ export const useSceneStore = create<SceneState>()(
 
                 const { mainStreamId } = get()
                 const COLS = 12
-                const TOTAL_ROWS = 24
+                const BASE_ROWS = 24
 
                 // Determine main stream: use mainStreamId or default to first item
                 const mainId = mainStreamId || items[0].id
@@ -257,21 +257,37 @@ export const useSceneStore = create<SceneState>()(
                             x: 0,
                             y: 0,
                             w: 12,
-                            h: 24
+                            h: BASE_ROWS
                         }
                     }))
                     set({ items: newItems })
                     return
                 }
 
-                // Main stream: 8 columns (66%), full height
-                // Secondary grid: 4 columns on right, distributed
-                const MAIN_W = 8
+                // Calculate number of secondary items
+                const secondaryCount = items.length - 1
+
+                // Calculate secondary grid dimensions dynamically based on count
+                // Secondary grid has 4 columns on the right
                 const SECONDARY_COLS = 4
                 
+                // Determine optimal rows for secondary grid
+                // Start with 2 rows (can fit 4 items), add more if needed
+                // Secondary items per row = 2 (since we have 4 cols and items are 2 cols wide)
+                let secondaryRows = 2
+                if (secondaryCount > 4) {
+                    // Need more rows: calculate minimum rows needed
+                    secondaryRows = Math.ceil(secondaryCount / 2)
+                }
+                
+                // Total rows needed = rows for secondary grid (they need full height)
+                // Main stream uses the same height as secondary grid
+                const TOTAL_ROWS = secondaryRows * 12 // Each row is 12 units tall in secondary grid
+
+                // Main stream: 8 columns (66%), full height
+                const MAIN_W = 8
+                
                 const newItems = items.map((item, index) => {
-                    // Find the index of this item relative to the main stream
-                    // We need to sort items so main stream is first, then others
                     const isMain = item.id === actualMainId
                     
                     if (isMain) {
@@ -288,12 +304,9 @@ export const useSceneStore = create<SceneState>()(
                     }
 
                     // Secondary items: distribute in the remaining 4 columns
-                    // Get secondary items (excluding main)
                     const secondaryItems = items.filter(i => i.id !== actualMainId)
                     const secondaryIndex = secondaryItems.findIndex(i => i.id === item.id)
                     
-                    // 2 rows in secondary grid
-                    const secondaryRows = 2
                     const secW = SECONDARY_COLS
                     const secH = TOTAL_ROWS / secondaryRows
 
