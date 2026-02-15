@@ -282,20 +282,6 @@ function HomeContent() {
 
           <LayoutModeToggle />
 
-          <Button
-            variant="ghost"
-            size="icon"
-            onClick={() => {
-              const { autoLayout } = useSceneStore.getState()
-              autoLayout()
-              toast.success("Layout organizado")
-            }}
-            className="h-9 w-9 transition-colors hover:bg-white/40 text-slate-600 hover:text-blue-900 rounded-full"
-            title="Auto-organizar grilla"
-          >
-            <LayoutTemplate className="h-5 w-5" />
-          </Button>
-
           <div className="w-px h-6 bg-slate-200 mx-1" />
 
           <ThemeToggle />

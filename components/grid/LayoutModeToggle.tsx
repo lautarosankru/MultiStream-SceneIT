@@ -2,7 +2,7 @@
 
 import { useSceneStore } from "@/store/useSceneStore"
 import { Button } from "@/components/ui/button"
-import { LayoutGrid, Sparkles } from "lucide-react"
+import { LayoutGrid, Sparkles, Hand } from "lucide-react"
 import { cn } from "@/lib/utils"
 
 export function LayoutModeToggle() {
@@ -16,6 +16,11 @@ export function LayoutModeToggle() {
     const handleSpotlightClick = () => {
         setLayoutMode('spotlight')
         spotlightLayout()
+    }
+
+    const handleCustomClick = () => {
+        setLayoutMode('custom')
+        // Custom mode doesn't auto-arrange - user can drag/resize manually
     }
 
     return (
@@ -50,6 +55,22 @@ export function LayoutModeToggle() {
             >
                 <Sparkles className="h-3.5 w-3.5" />
                 <span className="hidden sm:inline">Spotlight</span>
+            </Button>
+
+            <Button
+                variant="ghost"
+                size="sm"
+                onClick={handleCustomClick}
+                className={cn(
+                    "h-8 px-3 rounded-full text-xs font-semibold transition-all duration-300 gap-1.5",
+                    layoutMode === 'custom'
+                        ? "bg-emerald-500/90 text-white shadow-lg ring-2 ring-emerald-500/50"
+                        : "text-slate-600 hover:text-slate-900 hover:bg-white/50"
+                )}
+                title="Arrastrar y redimensionar manualmente"
+            >
+                <Hand className="h-3.5 w-3.5" />
+                <span className="hidden sm:inline">Custom</span>
             </Button>
         </div>
     )

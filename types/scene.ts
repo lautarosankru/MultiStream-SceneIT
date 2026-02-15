@@ -12,7 +12,7 @@ export interface StreamLayout {
     minH?: number;
 }
 
-export type LayoutMode = 'auto' | 'spotlight';
+export type LayoutMode = 'auto' | 'spotlight' | 'custom';
 
 export type ItemType = 'video' | 'chat';
 export type StreamPlatform = 'twitch' | 'kick' | 'youtube' | 'custom';
