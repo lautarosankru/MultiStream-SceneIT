@@ -17,6 +17,7 @@ import { LayoutTemplate, PanelRightOpen, PanelRightClose, Edit2, Loader2 } from 
 import { cn } from "@/lib/utils"
 import { EmptyState } from "@/components/grid/EmptyState"
 import { LiquidBackground } from "@/components/ui/LiquidBackground"
+import { TotalViewers } from "@/components/ui/TotalViewers"
 import { StreamItem } from "@/types/scene"
 
 interface ValidationResult {
@@ -161,6 +162,7 @@ function HomeContent() {
           <span className="font-bold text-xl text-blue-900 dark:text-white tracking-tight drop-shadow-sm hidden md:inline">
             Scene<span className="text-transparent bg-clip-text bg-gradient-to-r from-cyan-600 to-lime-600 dark:from-cyan-400 dark:to-lime-400 italic">It</span>
           </span>
+          <TotalViewers />
         </div>
 
         {/* Center: Controls */}
