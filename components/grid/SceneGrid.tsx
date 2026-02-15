@@ -50,7 +50,7 @@ export function SceneGrid() {
         
         // Add some buffer and ensure minimum of BASE_ROWS
         return Math.max(BASE_ROWS, maxYH);
-    }, [items]);
+    }, [items, layoutMode]);
 
     // rowHeight is calculated to fit BASE_ROWS (24) in the container
     // This ensures consistent sizing regardless of actual maxRows
