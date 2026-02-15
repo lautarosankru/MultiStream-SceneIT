@@ -40,9 +40,12 @@ function HomeContent() {
   const [isLoadingStreamers, setIsLoadingStreamers] = useState(false)
   const [validationProgress, setValidationProgress] = useState<string | null>(null)
 
-  // Handle friendly URL (e.g., /coscu/coker/goncho)
+  // Handle friendly URL (e.g., /coscu/coker/goncho) - DEPRECATED: use ?streamers= instead
   useEffect(() => {
     const loadFromFriendlyUrl = async () => {
+      // Skip if we have streamers param (new system)
+      if (streamersParam) return
+      
       // Parse path segments (skip empty and leading slash)
       const pathSegments = pathname.split('/').filter(s => s && s.length > 0)
       
