@@ -13,7 +13,8 @@ export function ChatSidebar() {
         items,
         activeChatId,
         setActiveChat,
-        isSidebarOpen
+        isSidebarOpen,
+        sidebarWidth
     } = useSceneStore()
 
     // Force reload of active chat logic
@@ -38,7 +39,8 @@ export function ChatSidebar() {
         <motion.div
             initial={{ opacity: 0, x: 20 }}
             animate={{ opacity: 1, x: 0 }}
-            className="w-96 h-full flex flex-col shrink-0 transition-all duration-300 glass dark:bg-black dark:backdrop-blur-none border-l border-white/20 dark:border-white/5 shadow-2xl z-50"
+            className="h-full flex flex-col shrink-0 transition-all duration-300 glass dark:bg-black dark:backdrop-blur-none border-l border-white/20 dark:border-white/5 shadow-2xl z-50"
+            style={{ width: sidebarWidth }}
         >
             {/* Glossy Header */}
             <div className="h-12 flex items-center px-2 gap-2 bg-gradient-to-b from-white/60 to-white/30 dark:bg-black border-b border-white/50 dark:border-white/5 backdrop-blur-md shadow-sm">

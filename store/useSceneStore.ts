@@ -17,6 +17,8 @@ interface SceneState {
     // Chat State
     activeChatId: string | null;
     isSidebarOpen: boolean;
+    sidebarWidth: number;
+    setSidebarWidth: (width: number) => void;
 
     // Actions
     addItem: (url: string, type?: ItemType) => void;
@@ -52,6 +54,7 @@ export const useSceneStore = create<SceneState>()(
             backgroundId: 'default',
             activeChatId: null,
             isSidebarOpen: true,
+            sidebarWidth: 384,
 
             // Layout Mode State
             layoutMode: 'auto',
@@ -204,6 +207,10 @@ export const useSceneStore = create<SceneState>()(
                 set((state) => ({ isSidebarOpen: !state.isSidebarOpen }))
             },
 
+            setSidebarWidth: (width: number) => {
+                set({ sidebarWidth: width })
+            },
+
             // Layout Mode Actions
             setLayoutMode: (mode: LayoutMode) => {
                 set({ layoutMode: mode })
@@ -332,6 +339,7 @@ export const useSceneStore = create<SceneState>()(
                 mainStreamId: state.mainStreamId,
                 backgroundId: state.backgroundId,
                 isLocked: state.isLocked,
+                sidebarWidth: state.sidebarWidth,
             }),
         }
     )

@@ -36,7 +36,7 @@ function HomeContent() {
   const pathname = usePathname()
   const layoutParam = searchParams.get("layout")
   const streamersParam = searchParams.get("streamers")
-  const { setItems, items, isLocked, toggleLock, isSidebarOpen, toggleSidebar } = useSceneStore()
+  const { setItems, items, isLocked, toggleLock, isSidebarOpen, toggleSidebar, sidebarWidth, setSidebarWidth } = useSceneStore()
   const [isLoaded, setIsLoaded] = useState(false)
   const [isLoadingStreamers, setIsLoadingStreamers] = useState(false)
   const [validationProgress, setValidationProgress] = useState<string | null>(null)
@@ -121,6 +121,9 @@ function HomeContent() {
             }
           })
 
+          // Clear existing items before loading new ones
+          setItems([])
+          
           setItems(streamItems)
           toast.success(`${validResults.length} stream(s) cargado(s)`)
           
@@ -225,6 +228,9 @@ function HomeContent() {
           }
         })
 
+        // Clear existing items before loading new ones
+        setItems([])
+        
         setItems(streamItems)
         toast.success(`${validResults.length} stream(s) cargado(s)`)
         
@@ -298,6 +304,18 @@ function HomeContent() {
           >
             {isSidebarOpen ? <PanelRightClose className="h-5 w-5" /> : <PanelRightOpen className="h-5 w-5" />}
           </Button>
+
+          {isSidebarOpen && (
+            <input
+              type="range"
+              min="200"
+              max="600"
+              value={sidebarWidth}
+              onChange={(e) => setSidebarWidth(Number(e.target.value))}
+              className="w-24 h-1 ml-2 accent-cyan-500 cursor-pointer"
+              title={`Chat width: ${sidebarWidth}px`}
+            />
+          )}
         </div>
       </header>
 
