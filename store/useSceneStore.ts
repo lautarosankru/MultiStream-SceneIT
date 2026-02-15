@@ -242,7 +242,7 @@ export const useSceneStore = create<SceneState>()(
 
                 const { mainStreamId } = get()
                 const COLS = 12
-                const BASE_ROWS = 24
+                const TOTAL_ROWS = 24
 
                 // Determine main stream: use mainStreamId or default to first item
                 const mainId = mainStreamId || items[0].id
@@ -264,7 +264,7 @@ export const useSceneStore = create<SceneState>()(
                             x: 0,
                             y: 0,
                             w: 12,
-                            h: BASE_ROWS
+                            h: TOTAL_ROWS
                         }
                     }))
                     set({ items: newItems })
@@ -273,31 +273,22 @@ export const useSceneStore = create<SceneState>()(
 
                 // Calculate number of secondary items
                 const secondaryCount = items.length - 1
-                const TOTAL_ROWS = 24
+
+                // Main stream: 60% of height (14 rows)
+                const MAIN_H = Math.round(TOTAL_ROWS * 0.6) // 14
                 
-                // Dynamic columns based on secondary count to avoid too wide/short items
-                // 1-2: 1-2 cols (wide), 3-4: 2 cols, 5-6: 3 cols, 7+: 4 cols
-                const getSecondaryCols = (count: number) => {
-                    if (count <= 1) return count
-                    if (count <= 4) return 2
-                    if (count <= 6) return 3
-                    return 4
-                }
+                // Secondary height: remaining 40% (10 rows)
+                const SEC_H = TOTAL_ROWS - MAIN_H // 10
                 
-                const secondaryCols = getSecondaryCols(secondaryCount)
-                const secW = Math.floor(12 / secondaryCols) // Width per secondary item
-                const secPerCol = Math.ceil(secondaryCount / secondaryCols) // Items per column (for height calc)
+                // Secondary width: divide 12 cols evenly among all secondary items
+                const SEC_W = Math.floor(COLS / secondaryCount)
                 
-                // Main stream: 60% of height (~14 rows)
-                const MAIN_H = Math.round(TOTAL_ROWS * 0.6)
+                // Get all secondary items in original order
+                const secondaryItems = items.filter(i => i.id !== actualMainId)
                 
-                // Secondary height: divide remaining space by items per column
-                // This ensures they fill vertically regardless of column count
-                const secH = Math.floor((TOTAL_ROWS - MAIN_H) / secPerCol)
-                
-                const newItems = items.map((item, index) => {
+                const newItems = items.map((item) => {
                     const isMain = item.id === actualMainId
-                    
+
                     if (isMain) {
                         return {
                             ...item,
@@ -305,28 +296,23 @@ export const useSceneStore = create<SceneState>()(
                                 ...item.layout,
                                 x: 0,
                                 y: 0,
-                                w: 12,
+                                w: COLS,
                                 h: MAIN_H
                             }
                         }
                     }
 
-                    // Secondary items: distribute in grid below main
-                    const secondaryItems = items.filter(i => i.id !== actualMainId)
-                    const secondaryIndex = secondaryItems.findIndex(i => i.id === item.id)
-                    
-                    // Calculate grid position
-                    const col = secondaryIndex % secondaryCols
-                    const row = Math.floor(secondaryIndex / secondaryCols)
+                    // Secondary items: all in one row below main, distributed horizontally
+                    const secIndex = secondaryItems.findIndex(i => i.id === item.id)
 
                     return {
                         ...item,
                         layout: {
                             ...item.layout,
-                            x: col * secW,
-                            y: MAIN_H + (row * secH),
-                            w: secW,
-                            h: secH
+                            x: secIndex * SEC_W,
+                            y: MAIN_H,
+                            w: SEC_W,
+                            h: SEC_H
                         }
                     }
                 })

@@ -5,7 +5,7 @@ import { ChatEmbed } from "./embeds/ChatEmbed"
 import { cn } from "@/lib/utils"
 import { Button } from "@/components/ui/button"
 import { MessageSquare, RefreshCw } from "lucide-react"
-import { useEffect, useState, useCallback, useRef } from "react"
+import { useEffect, useState } from "react"
 import { motion } from "framer-motion"
 
 const MIN_SIDEBAR_WIDTH = 280
@@ -21,48 +21,41 @@ export function ChatSidebar() {
         setSidebarWidth
     } = useSceneStore()
 
-    // Resize handling
-    const isResizing = useRef(false)
-    const startX = useRef(0)
-    const startWidth = useRef(0)
+    // Resize handling - robust version
     const [isDragging, setIsDragging] = useState(false)
 
-    const startResize = useCallback((e: React.MouseEvent) => {
-        isResizing.current = true
-        startX.current = e.clientX
-        startWidth.current = sidebarWidth
-        setIsDragging(true)
+    const handleMouseDown = (e: React.MouseEvent) => {
         e.preventDefault()
-    }, [sidebarWidth])
-
-    const handleMouseMove = useCallback((e: MouseEvent) => {
-        if (!isResizing.current) return
-
-        const deltaX = e.clientX - startX.current
-        const newWidth = Math.min(MAX_SIDEBAR_WIDTH, Math.max(MIN_SIDEBAR_WIDTH, startWidth.current + deltaX))
-        setSidebarWidth(newWidth)
-    }, [setSidebarWidth])
-
-    const stopResize = useCallback(() => {
-        isResizing.current = false
-        setIsDragging(false)
-    }, [])
+        setIsDragging(true)
+    }
 
     useEffect(() => {
-        if (isDragging) {
-            window.addEventListener('mousemove', handleMouseMove)
-            window.addEventListener('mouseup', stopResize)
-            document.body.style.cursor = 'col-resize'
-            document.body.style.userSelect = 'none'
+        if (!isDragging) return
+
+        const handleMouseMove = (e: MouseEvent) => {
+            // Calculate new width based on mouse position relative to viewport
+            // The sidebar is on the right, so left edge is fixed
+            const newWidth = e.clientX
+            const clampedWidth = Math.min(MAX_SIDEBAR_WIDTH, Math.max(MIN_SIDEBAR_WIDTH, newWidth))
+            setSidebarWidth(clampedWidth)
         }
 
+        const handleMouseUp = () => {
+            setIsDragging(false)
+        }
+
+        // Add listeners to window to catch mouse events outside the component
+        window.addEventListener('mousemove', handleMouseMove)
+        window.addEventListener('mouseup', handleMouseUp)
+        window.addEventListener('mouseleave', handleMouseUp) // Handle mouse leaving viewport
+
+        // Cleanup: always remove listeners
         return () => {
             window.removeEventListener('mousemove', handleMouseMove)
-            window.removeEventListener('mouseup', stopResize)
-            document.body.style.cursor = ''
-            document.body.style.userSelect = ''
+            window.removeEventListener('mouseup', handleMouseUp)
+            window.removeEventListener('mouseleave', handleMouseUp)
         }
-    }, [isDragging, handleMouseMove, stopResize])
+    }, [isDragging, setSidebarWidth])
 
     // Force reload of active chat logic
     const [reloadKey, setReloadKey] = useState(0)
@@ -92,12 +85,10 @@ export function ChatSidebar() {
             {/* Resize Handle - Left Edge */}
             <div
                 className={cn(
-                    "absolute left-0 top-0 h-full w-1.5 cursor-col-resize z-10 transition-colors duration-200",
-                    isDragging 
-                        ? "bg-cyan-400" 
-                        : "bg-transparent hover:bg-cyan-400/50"
+                    "absolute left-0 top-0 h-full w-1.5 cursor-col-resize z-10",
+                    isDragging ? "bg-cyan-400" : "bg-transparent hover:bg-cyan-400/50"
                 )}
-                onMouseDown={startResize}
+                onMouseDown={handleMouseDown}
             />
             
             {/* Resize Guide Line */}
