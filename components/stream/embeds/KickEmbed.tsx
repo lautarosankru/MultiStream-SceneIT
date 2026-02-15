@@ -3,7 +3,7 @@
 import type { StreamItem } from "@/types/scene"
 
 export function KickEmbed({ item }: { item: StreamItem }) {
-    const src = `https://player.kick.com/${item.sourceId}?autoplay=true&muted=${item.isMuted}&quality=source`
+    const src = `https://player.kick.cx/${item.sourceId}?autoplay=true&muted=${item.isMuted}`
 
     return (
         <iframe

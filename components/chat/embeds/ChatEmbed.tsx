@@ -41,14 +41,13 @@ export function ChatEmbed({ item }: ChatEmbedProps) {
             )
 
         case 'kick':
-            // Kick Chat
-            const kickSrc = `https://kick.com/${item.sourceId}/chatroom`
+            // Kick Chat via kick.cx proxy for better compatibility
+            const kickSrc = `https://chat.kick.cx/embed/${item.sourceId}`
             return (
                 <iframe
                     src={kickSrc}
                     className="w-full h-full border-none"
                     title={`Kick Chat ${item.sourceId}`}
-                    sandbox="allow-scripts allow-same-origin allow-forms allow-popups allow-popups-to-escape-sandbox allow-storage-access-by-user-activation"
                 />
             )
 
