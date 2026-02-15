@@ -272,17 +272,8 @@ function HomeContent() {
           <TotalViewers />
         </div>
 
-        {/* Center: Controls + Kick User */}
-        <div className="flex-1 flex items-center justify-center gap-2 mx-2">
-          {/* Mostrar usuario conectado si existe */}
-          {kickUser && (
-            <div className="hidden md:flex items-center gap-1 px-2 py-1 rounded-full bg-[#53FC18]/10 border border-[#53FC18]/30">
-              <div className="w-5 h-5 rounded-full bg-[#53FC18] flex items-center justify-center shrink-0">
-                <span className="text-[10px] font-bold text-black">K</span>
-              </div>
-              <span className="text-xs font-medium text-[#53FC18] truncate max-w-[80px]">{kickUser.username}</span>
-            </div>
-          )}
+        {/* Center: Controls */}
+        <div className="flex-1 flex items-center justify-center mx-2">
           <AddStream />
         </div>
 
@@ -324,18 +315,6 @@ function HomeContent() {
           >
             {isSidebarOpen ? <PanelRightClose className="h-5 w-5" /> : <PanelRightOpen className="h-5 w-5" />}
           </Button>
-
-          {isSidebarOpen && (
-            <input
-              type="range"
-              min="200"
-              max="600"
-              value={sidebarWidth}
-              onChange={(e) => setSidebarWidth(Number(e.target.value))}
-              className="w-24 h-1 ml-2 accent-cyan-500 cursor-pointer"
-              title={`Chat width: ${sidebarWidth}px`}
-            />
-          )}
         </div>
       </header>
 
