@@ -62,11 +62,23 @@ export async function POST(request: Request) {
             }
           }
 
+          // For Twitch and YouTube, assume valid (the embed will handle validation)
+          if (normalizedPlatform === 'twitch' || normalizedPlatform === 'youtube') {
+            return {
+              platform: normalizedPlatform,
+              username,
+              valid: true,
+              isLive: null,
+              avatar: null,
+              displayName: username
+            }
+          }
+
           return {
             platform: normalizedPlatform,
             username,
             valid: false,
-            error: 'Platform not supported yet'
+            error: 'Platform not supported'
           }
         } catch (error) {
           return {
