@@ -16,7 +16,7 @@ export async function GET(request: Request) {
   try {
     // Validate based on platform
     if (platform === 'kick') {
-      const res = await fetchKickAPI(`/public/v1/channels?slug=${username}`, {
+      const res = await fetch(`https://kick.com/api/v2/channels/${username}`, {
         next: { revalidate: 300 }
       })
 
@@ -29,8 +29,10 @@ export async function GET(request: Request) {
         }, { status: 200 })
       }
 
-      const json = await res.json()
-      if (!json.data || json.data.length === 0) {
+      const channel = await res.json()
+      
+      // Channel not found
+      if (!channel.id) {
         return NextResponse.json({ 
           valid: false, 
           platform: 'kick', 
@@ -39,16 +41,15 @@ export async function GET(request: Request) {
         }, { status: 200 })
       }
 
-      const channel = json.data[0]
       return NextResponse.json({
         valid: true,
         platform: 'kick',
         username,
-        isLive: channel.isLive,
-        avatar: channel.user?.avatar?.imageUrl || null,
+        isLive: channel.livestream?.isLive || false,
+        avatar: channel.user?.profile_pic || null,
         displayName: channel.user?.username || username,
-        viewerCount: channel.viewerCount || 0,
-        category: channel.categories?.[0]?.name || null
+        viewerCount: channel.livestream?.viewer_count || 0,
+        category: channel.livestream?.categories?.[0]?.name || null
       })
     }
 
