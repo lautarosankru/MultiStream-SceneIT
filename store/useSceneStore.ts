@@ -271,22 +271,9 @@ export const useSceneStore = create<SceneState>()(
                 // Secondary grid has 4 columns on the right
                 const SECONDARY_COLS = 4
                 
-                // Determine optimal rows for secondary grid
-                // Start with 2 rows (can fit 4 items: 2 per row), add more if needed
-                // Secondary items per row = 2 (since we have 4 cols and items are 2 cols wide)
-                let secondaryRows = 2
-                if (secondaryCount > 4) {
-                    // Need more rows: calculate minimum rows needed
-                    secondaryRows = Math.ceil(secondaryCount / 2)
-                }
-                
-                // Secondary grid uses 12 rows per "logical row" (each secondary item is 12 tall)
-                // Total secondary grid height = secondaryRows * 12
-                const SECONDARY_GRID_ROWS = secondaryRows * 12
-                
-                // Main stream uses the same height as the secondary grid
-                // But we need at least 24 rows for the base grid
-                const TOTAL_ROWS = Math.max(24, SECONDARY_GRID_ROWS)
+                // Each secondary item gets its own row, dividing the height evenly
+                // Total rows = secondary items + 1 for main stream (at least 24)
+                const TOTAL_ROWS = Math.max(24, (secondaryCount + 1) * 6) // 6 rows per item
 
                 // Main stream: 8 columns (66%), full height
                 const MAIN_W = 8
@@ -312,16 +299,17 @@ export const useSceneStore = create<SceneState>()(
                     const secondaryIndex = secondaryItems.findIndex(i => i.id === item.id)
                     
                     const secW = SECONDARY_COLS
-                    const secH = TOTAL_ROWS / secondaryRows
+                    const secH = Math.floor(TOTAL_ROWS / secondaryCount)
 
-                    const secCol = secondaryIndex % 2
-                    const secRow = Math.floor(secondaryIndex / 2)
+                    // Stack secondary items vertically (one per row, each gets full width of secondary area)
+                    const secRow = secondaryIndex
+                    const secX = MAIN_W // All secondary items go to the right of main stream
 
                     return {
                         ...item,
                         layout: {
                             ...item.layout,
-                            x: MAIN_W + (secCol * secW),
+                            x: secX,
                             y: secRow * secH,
                             w: secW,
                             h: secH
