@@ -1,0 +1,432 @@
+{
+  "meta": {
+    "lastTouchedVersion": "2026.2.13",
+    "lastTouchedAt": "2026-02-14T19:57:27.114Z"
+  },
+  "wizard": {
+    "lastRunAt": "2026-01-30T09:13:12.848Z",
+    "lastRunVersion": "2026.1.29",
+    "lastRunCommand": "onboard",
+    "lastRunMode": "local"
+  },
+  "models": {
+    "providers": {
+      "ollama": {
+        "baseUrl": "http://127.0.0.1:11434/v1",
+        "apiKey": "ollama-local",
+        "api": "openai-completions",
+        "models": [
+          {
+            "id": "minimax-m2.5:cloud",
+            "name": "minimax-m2.5:cloud",
+            "reasoning": false,
+            "input": [
+              "text"
+            ],
+            "cost": {
+              "input": 0,
+              "output": 0,
+              "cacheRead": 0,
+              "cacheWrite": 0
+            },
+            "contextWindow": 131072,
+            "maxTokens": 16384
+          }
+        ]
+      },
+      "groq": {
+        "baseUrl": "https://api.groq.com/openai/v1",
+        "apiKey": "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",
+        "api": "openai-completions",
+        "models": [
+          {
+            "id": "meta-llama/llama-4-scout-17b-16e-instruct",
+            "name": "LLaMA 4 Scout (Vision)",
+            "reasoning": false,
+            "input": [
+              "text",
+              "image"
+            ],
+            "cost": {
+              "input": 0,
+              "output": 0,
+              "cacheRead": 0,
+              "cacheWrite": 0
+            },
+            "contextWindow": 131072,
+            "maxTokens": 16384
+          },
+          {
+            "id": "llama-3.3-70b-versatile",
+            "name": "Llama 3.3 70B (Groq)",
+            "reasoning": false,
+            "input": [
+              "text"
+            ],
+            "cost": {
+              "input": 0.59,
+              "output": 0.79,
+              "cacheRead": 0,
+              "cacheWrite": 0
+            },
+            "contextWindow": 131072,
+            "maxTokens": 32768
+          },
+          {
+            "id": "llama-3.1-8b-instant",
+            "name": "Llama 3.1 8B (Groq)",
+            "reasoning": false,
+            "input": [
+              "text"
+            ],
+            "cost": {
+              "input": 0.05,
+              "output": 0.08,
+              "cacheRead": 0,
+              "cacheWrite": 0
+            },
+            "contextWindow": 131072,
+            "maxTokens": 131072
+          },
+          {
+            "id": "whisper-large-v3-turbo",
+            "name": "Whisper V3 Turbo (Speech to Text)",
+            "reasoning": false,
+            "input": [
+              "text"
+            ],
+            "cost": {
+              "input": 0.04,
+              "output": 0,
+              "cacheRead": 0,
+              "cacheWrite": 0
+            },
+            "contextWindow": 1,
+            "maxTokens": 1
+          },
+          {
+            "id": "meta-llama/llama-4-maverick-17b-128e-instruct",
+            "name": "LLaMA 4 Maverick (Elite Vision)",
+            "reasoning": false,
+            "input": [
+              "text",
+              "image"
+            ],
+            "cost": {
+              "input": 0,
+              "output": 0,
+              "cacheRead": 0,
+              "cacheWrite": 0
+            },
+            "contextWindow": 131072,
+            "maxTokens": 16384
+          },
+          {
+            "id": "gpt-oss-120b",
+            "name": "GPT OSS 120B (Groq Lógica)",
+            "reasoning": true,
+            "input": [
+              "text"
+            ],
+            "cost": {
+              "input": 0,
+              "output": 0,
+              "cacheRead": 0,
+              "cacheWrite": 0
+            },
+            "contextWindow": 131072,
+            "maxTokens": 16384
+          }
+        ]
+      },
+      "openrouter": {
+        "baseUrl": "https://openrouter.ai/api/v1",
+        "apiKey": "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",
+        "api": "openai-completions",
+        "models": [
+          {
+            "id": "google/gemma-3-12b-it:free",
+            "name": "Gemma 3 12B Vision (Free)",
+            "reasoning": false,
+            "input": [
+              "text",
+              "image"
+            ],
+            "cost": {
+              "input": 0,
+              "output": 0,
+              "cacheRead": 0,
+              "cacheWrite": 0
+            },
+            "contextWindow": 131072,
+            "maxTokens": 8192
+          },
+          {
+            "id": "qwen/qwen3-235b-thinking",
+            "name": "Qwen3 235B Thinking (Elite)",
+            "reasoning": true,
+            "input": [
+              "text"
+            ],
+            "cost": {
+              "input": 0,
+              "output": 0,
+              "cacheRead": 0,
+              "cacheWrite": 0
+            },
+            "contextWindow": 131072,
+            "maxTokens": 32768
+          },
+          {
+            "id": "nousresearch/hermes-3-405b-instruct",
+            "name": "Nous Hermes 3 405B (Elite)",
+            "reasoning": false,
+            "input": [
+              "text"
+            ],
+            "cost": {
+              "input": 0,
+              "output": 0,
+              "cacheRead": 0,
+              "cacheWrite": 0
+            },
+            "contextWindow": 131072,
+            "maxTokens": 32768
+          },
+          {
+            "id": "black-forest-labs/flux.2-pro",
+            "name": "FLUX.2 Pro (Premium)",
+            "reasoning": false,
+            "input": [
+              "text"
+            ],
+            "cost": {
+              "input": 0,
+              "output": 0,
+              "cacheRead": 0,
+              "cacheWrite": 0
+            },
+            "contextWindow": 1,
+            "maxTokens": 1
+          },
+          {
+            "id": "google/gemma-3-12b-it:free",
+            "name": "Gemma 3 12B Vision (Free)",
+            "reasoning": false,
+            "input": [
+              "text",
+              "image"
+            ],
+            "cost": {
+              "input": 0,
+              "output": 0,
+              "cacheRead": 0,
+              "cacheWrite": 0
+            },
+            "contextWindow": 131072,
+            "maxTokens": 8192
+          },
+          {
+            "id": "nvidia/nemotron-nano-12b-v2-vl:free",
+            "name": "Nemotron Nano VL (Free)",
+            "reasoning": false,
+            "input": [
+              "text",
+              "image"
+            ],
+            "cost": {
+              "input": 0,
+              "output": 0,
+              "cacheRead": 0,
+              "cacheWrite": 0
+            },
+            "contextWindow": 131072,
+            "maxTokens": 8192
+          }
+        ]
+      },
+      "pollinations": {
+        "baseUrl": "https://gen.pollinations.ai/v1",
+        "apiKey": "sk_k5h6ugMCSCekEYBbNF4QEeNRPZWSZn9m",
+        "api": "openai-completions",
+        "models": [
+          {
+            "id": "openai",
+            "name": "Pollinations Vision (OpenAI)",
+            "reasoning": false,
+            "input": [
+              "text",
+              "image"
+            ],
+            "cost": {
+              "input": 0,
+              "output": 0,
+              "cacheRead": 0,
+              "cacheWrite": 0
+            },
+            "contextWindow": 131072,
+            "maxTokens": 8192
+          }
+        ]
+      }
+    }
+  },
+  "agents": {
+    "defaults": {
+      "model": {
+        "primary": "ollama/minimax-m2.5:cloud",
+        "fallbacks": [
+          "openrouter/nousresearch/hermes-3-405b-instruct",
+          "openrouter/qwen/qwen3-235b-thinking",
+          "groq/gpt-oss-120b"
+        ]
+      },
+      "imageModel": {
+        "primary": "groq/meta-llama/llama-4-maverick-17b-128e-instruct",
+        "fallbacks": [
+          "openrouter/google/gemma-3-12b-it:free",
+          "openrouter/nvidia/nemotron-nano-12b-v2-vl:free",
+          "groq/meta-llama/llama-4-scout-17b-16e-instruct",
+          "pollinations/openai"
+        ]
+      },
+      "models": {
+        "ollama/minimax-m2.5:cloud": {},
+        "groq/llama-3.3-70b-versatile": {},
+        "groq/llama-3.1-8b-instant": {},
+        "openrouter/google/gemini-2.0-flash-exp": {},
+        "openrouter/qwen/qwen3-32b": {},
+        "openrouter/meta-llama/llama-3.3-70b-instruct": {},
+        "pollinations/qwen-coder-turbo": {},
+        "google/gemini-3-flash-preview": {
+          "alias": "gemini-flash"
+        },
+        "openrouter/qwen/qwen3-235b-thinking": {
+          "alias": "qwen3-thinking"
+        },
+        "openrouter/nousresearch/hermes-3-405b-instruct": {
+          "alias": "hermes-405b"
+        },
+        "openrouter/black-forest-labs/flux.2-pro": {
+          "alias": "flux-pro"
+        },
+        "groq/meta-llama/llama-4-maverick-17b-128e-instruct": {
+          "alias": "maverick"
+        },
+        "groq/gpt-oss-120b": {
+          "alias": "gpt-oss"
+        },
+        "openrouter/google/gemma-3-12b-it:free": {},
+        "openrouter/nvidia/nemotron-nano-12b-v2-vl:free": {}
+      },
+      "workspace": "/home/lautarosanchez/.openclaw/workspace",
+      "memorySearch": {
+        "provider": "local",
+        "remote": {
+          "baseUrl": "https://openrouter.ai/v1",
+          "apiKey": "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"
+        },
+        "model": "google/gemini-embedding-001",
+        "local": {
+          "modelPath": "nomic-embed-text"
+        }
+      },
+      "compaction": {
+        "mode": "default",
+        "reserveTokensFloor": 24000,
+        "memoryFlush": {
+          "enabled": false
+        }
+      },
+      "thinkingDefault": "high",
+      "contextPruning": {
+        "mode": "off"
+      },
+      "maxConcurrent": 4,
+      "subagents": {
+        "model": "ollama/minimax-m2.5:cloud",
+        "maxConcurrent": 4
+      },
+      "sandbox": {
+        "mode": "off"
+      }
+    }
+  },
+  "tools": {
+    "profile": "coding",
+    "media": {
+      "image": {
+        "enabled": true,
+        "maxBytes": 10485760,
+        "maxChars": 500
+      },
+      "audio": {
+        "enabled": true,
+        "maxBytes": 20971520
+      }
+    }
+  },
+  "messages": {
+    "ackReactionScope": "group-mentions",
+    "tts": {
+      "auto": "off",
+      "provider": "elevenlabs",
+      "elevenlabs": {
+        "apiKey": "sk_4e911e903b875a3bce9216ef0305058bce92245ebd6d6448",
+        "voiceId": "pNInz6obpgDQGcFmaJgB",
+        "modelId": "eleven_multilingual_v2"
+      },
+      "edge": {
+        "enabled": true,
+        "voice": "es-MX-GerardoNeural",
+        "lang": "es-MX",
+        "outputFormat": "audio-24khz-48kbitrate-mono-mp3"
+      },
+      "maxTextLength": 700
+    }
+  },
+  "commands": {
+    "native": "auto",
+    "nativeSkills": "auto"
+  },
+  "channels": {
+    "telegram": {
+      "enabled": true,
+      "dmPolicy": "pairing",
+      "botToken": "8285339624:AAElB5TW4H2YwRcALWfVBUWCZmATSOeGeqc",
+      "groupPolicy": "allowlist",
+      "streamMode": "partial"
+    }
+  },
+  "gateway": {
+    "port": 18789,
+    "mode": "local",
+    "bind": "loopback",
+    "auth": {
+      "mode": "token",
+      "token": "undefined"
+    },
+    "tailscale": {
+      "mode": "off",
+      "resetOnExit": false
+    }
+  },
+  "skills": {
+    "load": {
+      "watch": true
+    },
+    "install": {
+      "nodeManager": "npm"
+    }
+  },
+  "plugins": {
+    "entries": {
+      "telegram": {
+        "enabled": true
+      },
+      "whatsapp": {
+        "enabled": false
+      }
+    }
+  }
+}
