@@ -1,6 +1,7 @@
 "use client"
 
 import { useSceneStore } from "@/store/useSceneStore"
+import { useResizable } from "@/lib/hooks/useResizable"
 import { ChatEmbed } from "./embeds/ChatEmbed"
 import { cn } from "@/lib/utils"
 import { Button } from "@/components/ui/button"
@@ -17,45 +18,18 @@ export function ChatSidebar() {
         activeChatId,
         setActiveChat,
         isSidebarOpen,
-        sidebarWidth,
-        setSidebarWidth
+        chatSidebarWidth,
+        setChatSidebarWidth
     } = useSceneStore()
 
-    // Resize handling - robust version
-    const [isDragging, setIsDragging] = useState(false)
-
-    const handleMouseDown = (e: React.MouseEvent) => {
-        e.preventDefault()
-        setIsDragging(true)
-    }
-
-    useEffect(() => {
-        if (!isDragging) return
-
-        const handleMouseMove = (e: MouseEvent) => {
-            // Calculate new width based on mouse position relative to viewport
-            // The sidebar is on the right, so left edge is fixed
-            const newWidth = e.clientX
-            const clampedWidth = Math.min(MAX_SIDEBAR_WIDTH, Math.max(MIN_SIDEBAR_WIDTH, newWidth))
-            setSidebarWidth(clampedWidth)
-        }
-
-        const handleMouseUp = () => {
-            setIsDragging(false)
-        }
-
-        // Add listeners to window to catch mouse events outside the component
-        window.addEventListener('mousemove', handleMouseMove)
-        window.addEventListener('mouseup', handleMouseUp)
-        window.addEventListener('mouseleave', handleMouseUp) // Handle mouse leaving viewport
-
-        // Cleanup: always remove listeners
-        return () => {
-            window.removeEventListener('mousemove', handleMouseMove)
-            window.removeEventListener('mouseup', handleMouseUp)
-            window.removeEventListener('mouseleave', handleMouseUp)
-        }
-    }, [isDragging, setSidebarWidth])
+    // ✅ Nuevo hook personalizado para resize
+    const { width, isDragging, resizeHandleProps } = useResizable({
+        initialWidth: chatSidebarWidth,
+        minWidth: MIN_SIDEBAR_WIDTH,
+        maxWidth: (viewportWidth) => Math.min(MAX_SIDEBAR_WIDTH, viewportWidth * 0.5),
+        edge: 'left', // Sidebar está a la derecha, resize desde el borde izquierdo
+        onResize: setChatSidebarWidth,
+    })
 
     // Force reload of active chat logic
     const [reloadKey, setReloadKey] = useState(0)
@@ -79,22 +53,16 @@ export function ChatSidebar() {
         <motion.div
             initial={{ opacity: 0, x: 20 }}
             animate={{ opacity: 1, x: 0 }}
-            className="h-full flex flex-col shrink-0 transition-all duration-300 glass dark:bg-black dark:backdrop-blur-none border-l border-white/20 dark:border-white/5 shadow-2xl z-50 relative"
-            style={{ width: sidebarWidth }}
-        >
-            {/* Resize Handle - Left Edge */}
-            <div
-                className={cn(
-                    "absolute left-0 top-0 h-full w-1.5 cursor-col-resize z-10",
-                    isDragging ? "bg-cyan-400" : "bg-transparent hover:bg-cyan-400/50"
-                )}
-                onMouseDown={handleMouseDown}
-            />
-            
-            {/* Resize Guide Line */}
-            {isDragging && (
-                <div className="absolute left-0 top-0 h-full w-px bg-cyan-400/30 pointer-events-none z-20" />
+            className={cn(
+                "h-full flex flex-col shrink-0 transition-all duration-300",
+                "glass-sidebar border-l border-white/20 dark:border-white/5 shadow-2xl z-50 relative",
+                isDragging && "ring-2 ring-cyan-400/50" // ✅ Feedback visual durante drag
             )}
+            style={{ width }}
+        >
+            {/* ✅ Resize Handle - Touch-friendly */}
+            <div {...resizeHandleProps} />
+
             {/* Glossy Header */}
             <div className="h-12 flex items-center px-2 gap-2 bg-gradient-to-b from-white/60 to-white/30 dark:bg-black border-b border-white/50 dark:border-white/5 backdrop-blur-md shadow-sm">
                 <div className="flex-1 flex gap-1 overflow-x-auto no-scrollbar mask-linear py-1">

@@ -36,7 +36,7 @@ function HomeContent() {
   const pathname = usePathname()
   const layoutParam = searchParams.get("layout")
   const usernamesParam = searchParams.get("s") // usernames: ?s=coscu,coker&p=kick,twitch
-  const { setItems, items, isLocked, toggleLock, isSidebarOpen, toggleSidebar, sidebarWidth, setSidebarWidth, kickUser } = useSceneStore()
+  const { setItems, items, isLocked, toggleLock, isSidebarOpen, toggleSidebar, chatSidebarWidth, setChatSidebarWidth, kickUser } = useSceneStore()
   const [isLoaded, setIsLoaded] = useState(false)
   const [isLoadingStreamers, setIsLoadingStreamers] = useState(false)
   const [validationProgress, setValidationProgress] = useState<string | null>(null)
@@ -46,18 +46,18 @@ function HomeContent() {
     const loadFromFriendlyUrl = async () => {
       // Skip if we have streamers param (new system)
       if (usernamesParam) return
-      
+
       // Parse path segments (skip empty and leading slash)
       const pathSegments = pathname.split('/').filter(s => s && s.length > 0)
-      
+
       if (pathSegments.length > 0 && !layoutParam && !isLoaded) {
         console.log('[SceneIt] Loading from friendly URL:', pathSegments)
         setIsLoadingStreamers(true)
-        
+
         try {
           const parsedStreamers = parseSlugs(pathSegments)
           console.log('[SceneIt] Parsed streamers:', parsedStreamers)
-          
+
           if (parsedStreamers.length === 0) {
             setIsLoadingStreamers(false)
             return
@@ -65,11 +65,11 @@ function HomeContent() {
 
           // Validate streamers via API
           setValidationProgress(`Validando ${parsedStreamers.length} streamer(s)...`)
-          
+
           const response = await fetch('/api/streamers/batch', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ 
+            body: JSON.stringify({
               streamers: parsedStreamers.map(s => ({ platform: s.platform, username: s.username }))
             })
           })
@@ -80,7 +80,7 @@ function HomeContent() {
 
           const { results } = await response.json()
           const validResults = results.filter((r: ValidationResult) => r.valid)
-          
+
           console.log('[SceneIt] Validation results:', results)
 
           if (validResults.length === 0) {
@@ -102,7 +102,7 @@ function HomeContent() {
           const streamItems: StreamItem[] = validResults.map((result: ValidationResult, index: number) => {
             const cols = Math.ceil(Math.sqrt(validResults.length))
             const rows = Math.ceil(validResults.length / cols)
-            
+
             return {
               id: `stream-${Date.now()}-${index}`,
               type: 'video' as const,
@@ -123,10 +123,10 @@ function HomeContent() {
 
           // Clear existing items before loading new ones
           setItems([])
-          
+
           setItems(streamItems)
           toast.success(`${validResults.length} stream(s) cargado(s)`)
-          
+
         } catch (error) {
           console.error('[SceneIt] Error loading from friendly URL:', error)
           toast.error("Error al cargar los streams")
@@ -162,34 +162,34 @@ function HomeContent() {
   useEffect(() => {
     const loadFromStreamersParam = async () => {
       if (!usernamesParam || isLoaded) return
-      
+
       console.log('[SceneIt] Loading from streamers param:', usernamesParam)
       setIsLoadingStreamers(true)
-      
+
       try {
         const usernames = usernamesParam.split(',').filter(s => s.length > 0)
-        
+
         // Get platforms from &p= param
         const platformParam = searchParams.get("p")
         const platforms = platformParam ? platformParam.split(',').filter(s => s.length > 0) : []
-        
+
         console.log('[SceneIt] Parsed params:', { usernames, platforms })
-        
+
         if (usernames.length === 0) {
           setIsLoadingStreamers(false)
           return
         }
 
         setValidationProgress(`Validando ${usernames.length} streamer(s)...`)
-        
+
         // Build streamers array with explicit platforms
         const streamersToValidate = usernames.map((username, index) => ({
           platform: platforms[index] || 'kick', // Default to kick if no platform specified
           username
         }))
-        
+
         console.log('[SceneIt] Streamers to validate:', streamersToValidate)
-        
+
         const response = await fetch('/api/streamers/batch', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
@@ -202,7 +202,7 @@ function HomeContent() {
 
         const { results } = await response.json()
         const validResults = results.filter((r: ValidationResult) => r.valid)
-        
+
         console.log('[SceneIt] Validation results:', results)
 
         if (validResults.length === 0) {
@@ -222,7 +222,7 @@ function HomeContent() {
         const streamItems: StreamItem[] = validResults.map((result: ValidationResult, index: number) => {
           const cols = Math.ceil(Math.sqrt(validResults.length))
           const rows = Math.ceil(validResults.length / cols)
-          
+
           return {
             id: `stream-${Date.now()}-${index}`,
             type: 'video' as const,
@@ -244,7 +244,7 @@ function HomeContent() {
         setItems([])
         setItems(streamItems)
         toast.success(`${validResults.length} stream(s) cargado(s)`)
-        
+
       } catch (error) {
         console.error('[SceneIt] Error loading from streamers param:', error)
         toast.error("Error al cargar los streams")

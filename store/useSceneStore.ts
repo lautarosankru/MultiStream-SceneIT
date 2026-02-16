@@ -17,8 +17,8 @@ interface SceneState {
     // Chat State
     activeChatId: string | null;
     isSidebarOpen: boolean;
-    sidebarWidth: number;
-    setSidebarWidth: (width: number) => void;
+    chatSidebarWidth: number;
+    setChatSidebarWidth: (width: number) => void;
 
     // Actions
     addItem: (url: string, type?: ItemType) => void;
@@ -54,7 +54,7 @@ export const useSceneStore = create<SceneState>()(
             backgroundId: 'default',
             activeChatId: null,
             isSidebarOpen: true,
-            sidebarWidth: 384,
+            chatSidebarWidth: 384,
 
             // Layout Mode State
             layoutMode: 'auto',
@@ -207,8 +207,8 @@ export const useSceneStore = create<SceneState>()(
                 set((state) => ({ isSidebarOpen: !state.isSidebarOpen }))
             },
 
-            setSidebarWidth: (width: number) => {
-                set({ sidebarWidth: width })
+            setChatSidebarWidth: (width: number) => {
+                set({ chatSidebarWidth: width })
             },
 
             // Layout Mode Actions
@@ -247,7 +247,7 @@ export const useSceneStore = create<SceneState>()(
                 // Determine main stream: use mainStreamId or default to first item
                 const mainId = mainStreamId || items[0].id
                 const mainItemIndex = items.findIndex(i => i.id === mainId)
-                
+
                 // If mainStreamId doesn't exist in items, reset to first item
                 const actualMainIndex = mainItemIndex === -1 ? 0 : mainItemIndex
                 const actualMainId = items[actualMainIndex].id
@@ -276,16 +276,16 @@ export const useSceneStore = create<SceneState>()(
 
                 // Main stream: 60% of height (14 rows)
                 const MAIN_H = Math.round(TOTAL_ROWS * 0.6) // 14
-                
+
                 // Secondary height: remaining 40% (10 rows)
                 const SEC_H = TOTAL_ROWS - MAIN_H // 10
-                
+
                 // Secondary width: divide 12 cols evenly among all secondary items
                 const SEC_W = Math.floor(COLS / secondaryCount)
-                
+
                 // Get all secondary items in original order
                 const secondaryItems = items.filter(i => i.id !== actualMainId)
-                
+
                 const newItems = items.map((item) => {
                     const isMain = item.id === actualMainId
 
@@ -325,16 +325,28 @@ export const useSceneStore = create<SceneState>()(
         }),
         {
             name: 'scene-storage',
-            partialize: (state) => ({ 
-                items: state.items, 
+            partialize: (state) => ({
+                items: state.items,
                 layoutMode: state.layoutMode,
                 mainStreamId: state.mainStreamId,
                 backgroundId: state.backgroundId,
                 isLocked: state.isLocked,
-                sidebarWidth: state.sidebarWidth,
+                chatSidebarWidth: state.chatSidebarWidth,
                 // Persistir datos básicos del usuario de Kick para mostrar UI mientras carga sesión
                 kickUser: state.kickUser,
             }),
+            onRehydrateStorage: () => (state) => {
+                if (!state) return
+
+                // Validar y ajustar chatSidebarWidth si es inválido para el viewport actual
+                if (typeof window !== 'undefined') {
+                    const maxAllowed = window.innerWidth * 0.5 // Max 50% del viewport
+                    const MAX_SIDEBAR_WIDTH = 800
+                    if (state.chatSidebarWidth > maxAllowed || state.chatSidebarWidth > MAX_SIDEBAR_WIDTH) {
+                        state.setChatSidebarWidth(Math.min(MAX_SIDEBAR_WIDTH, maxAllowed))
+                    }
+                }
+            }
         }
     )
 )
