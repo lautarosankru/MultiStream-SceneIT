@@ -8,8 +8,8 @@ export async function GET(request: Request, { params }: { params: Promise<{ slug
     }
 
     try {
-        // Use kick.cx API which is reliable
-        const res = await fetch(`https://api.kick.cx/v1/channels/${slug}`, {
+        // Fetch channel data from Kick API
+        const res = await fetch(`https://kick.com/api/v2/channels/${slug}`, {
             next: { revalidate: 3600 }
         })
 

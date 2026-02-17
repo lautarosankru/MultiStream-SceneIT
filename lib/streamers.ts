@@ -23,50 +23,20 @@ export interface ValidationResult {
 
 /**
  * Validate a Kick channel and return its information
- * Uses kick.cx proxy which works reliably
+ * Uses official Kick API
  */
 export async function validateKickChannel(username: string): Promise<ValidationResult> {
   try {
-    // Use kick.cx API which is the reliable proxy
-    const res = await fetch(`https://api.kick.cx/v1/channels/${username}`, {
+    const res = await fetch(`https://kick.com/api/v2/channels/${username}`, {
       next: { revalidate: 300 }
     })
 
     if (!res.ok) {
-      // Fallback to public API
-      const fallbackRes = await fetch(`https://kick.com/api/v2/channels/${username}`, {
-        next: { revalidate: 300 }
-      })
-      
-      if (!fallbackRes.ok) {
-        return {
-          platform: 'kick',
-          username,
-          valid: false,
-          error: 'Channel not found'
-        }
-      }
-      
-      const channel = await fallbackRes.json()
-      
-      if (!channel.id) {
-        return {
-          platform: 'kick',
-          username,
-          valid: false,
-          error: 'Channel not found'
-        }
-      }
-      
       return {
         platform: 'kick',
         username,
-        valid: true,
-        isLive: channel.livestream?.isLive || false,
-        avatar: channel.user?.profile_pic || null,
-        displayName: channel.user?.username || username,
-        viewerCount: channel.livestream?.viewer_count || 0,
-        category: channel.livestream?.categories?.[0]?.name || null
+        valid: false,
+        error: 'Channel not found'
       }
     }
 
