@@ -62,8 +62,8 @@ export function EmptyState() {
                         transition={{ delay: 0.3 }}
                         className="text-4xl md:text-5xl font-extrabold tracking-tight"
                     >
-                        <span className="text-slate-900 dark:text-white">Lienzo </span>
-                        <span className="text-transparent bg-clip-text bg-gradient-to-r from-cyan-600 to-lime-600 dark:from-cyan-400 dark:to-lime-400 italic pr-2">Vacío</span>
+                        <span className="text-slate-900 dark:text-white">Sin </span>
+                        <span className="text-transparent bg-clip-text bg-gradient-to-r from-cyan-600 to-lime-600 dark:from-cyan-400 dark:to-lime-400 italic pr-2">Escenas</span>
                     </motion.h2>
 
                     <motion.p
@@ -72,7 +72,7 @@ export function EmptyState() {
                         transition={{ delay: 0.5 }}
                         className="text-slate-600 dark:text-slate-400 text-lg md:text-xl font-medium max-w-sm mx-auto leading-relaxed"
                     >
-                        Empieza tu escena agregando tus streams favoritos aquí arriba.
+                        Agregá tus streams favoritos.
                     </motion.p>
                 </div>
 

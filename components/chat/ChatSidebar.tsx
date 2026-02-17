@@ -64,7 +64,7 @@ export function ChatSidebar() {
             <div {...resizeHandleProps} />
 
             {/* Glossy Header */}
-            <div className="h-12 flex items-center px-2 gap-2 bg-gradient-to-b from-white/60 to-white/30 dark:bg-black border-b border-white/50 dark:border-white/5 backdrop-blur-md shadow-sm">
+            <div className="h-12 flex items-center px-2 gap-2 bg-white/60 to-white/30 dark:bg-black/90 border-b border-white/50 dark:border-white/10 backdrop-blur-md shadow-sm">
                 <div className="flex-1 flex gap-1 overflow-x-auto no-scrollbar mask-linear py-1">
                     {items.map((item) => (
                         <button

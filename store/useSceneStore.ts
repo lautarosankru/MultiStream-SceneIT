@@ -79,7 +79,8 @@ export const useSceneStore = create<SceneState>()(
 
                 set((state) => ({
                     items: [...state.items, newItem],
-                    activeChatId: id
+                    activeChatId: id,
+                    isSidebarOpen: true
                 }))
 
                 // Apply layout based on current mode

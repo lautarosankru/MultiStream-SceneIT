@@ -15,6 +15,9 @@ const geistMono = Geist_Mono({
 export const metadata: Metadata = {
   title: "SceneIT - MultiStream Experience",
   description: "Una plataforma dinámica y moderna para visualizar múltiples streams simultáneamente con estética Frutiger Aero y Glassmorphism.",
+  icons: {
+    icon: "/favicon.jpg",
+  }
 };
 
 import { ThemeProvider } from "@/components/providers/ThemeProvider"
