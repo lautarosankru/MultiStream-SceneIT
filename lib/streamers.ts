@@ -23,52 +23,38 @@ export interface ValidationResult {
 
 /**
  * Validate a Kick channel and return its information
- * @param username - The Kick username to validate
- * @returns ValidationResult with channel details
+ * Uses App Credentials for authentication
  */
 export async function validateKickChannel(username: string): Promise<ValidationResult> {
   try {
-    // Use the authenticated API for better reliability
+    // Get app access token using client credentials
+    const tokenRes = await fetch('https://id.kick.com/oauth/token', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+      body: new URLSearchParams({
+        grant_type: 'client_credentials',
+        client_id: process.env.KICK_CLIENT_ID!,
+        client_secret: process.env.KICK_CLIENT_SECRET!,
+      }),
+      cache: 'no-store'
+    })
+
+    if (!tokenRes.ok) {
+      // Fallback to unauthenticated API
+      return await validateKickChannelFallback(username)
+    }
+
+    const tokenData = await tokenRes.json()
+    const accessToken = tokenData.access_token
+
+    // Use authenticated API
     const res = await fetch(`https://api.kick.com/public/v1/channels/${username}`, {
+      headers: { 'Authorization': `Bearer ${accessToken}` },
       next: { revalidate: 300 }
     })
 
     if (!res.ok) {
-      // Fallback to v2 if public v1 fails
-      const fallbackRes = await fetch(`https://kick.com/api/v2/channels/${username}`, {
-        next: { revalidate: 300 }
-      })
-      
-      if (!fallbackRes.ok) {
-        return {
-          platform: 'kick',
-          username,
-          valid: false,
-          error: 'Channel not found'
-        }
-      }
-      
-      const channel = await fallbackRes.json()
-      
-      if (!channel.id) {
-        return {
-          platform: 'kick',
-          username,
-          valid: false,
-          error: 'Channel not found'
-        }
-      }
-      
-      return {
-        platform: 'kick',
-        username,
-        valid: true,
-        isLive: channel.livestream?.isLive || false,
-        avatar: channel.user?.profile_pic || null,
-        displayName: channel.user?.username || username,
-        viewerCount: channel.livestream?.viewer_count || 0,
-        category: channel.livestream?.categories?.[0]?.name || null
-      }
+      return await validateKickChannelFallback(username)
     }
 
     const channel = await res.json()
@@ -93,6 +79,50 @@ export async function validateKickChannel(username: string): Promise<ValidationR
       category: channel.livestream?.categories?.[0]?.name || null
     }
   } catch (_error) {
+    return await validateKickChannelFallback(username)
+  }
+}
+
+/**
+ * Fallback: Unauthenticated validation using public API
+ */
+async function validateKickChannelFallback(username: string): Promise<ValidationResult> {
+  try {
+    const res = await fetch(`https://kick.com/api/v2/channels/${username}`, {
+      next: { revalidate: 300 }
+    })
+
+    if (!res.ok) {
+      return {
+        platform: 'kick',
+        username,
+        valid: false,
+        error: 'Channel not found'
+      }
+    }
+
+    const channel = await res.json()
+
+    if (!channel.id) {
+      return {
+        platform: 'kick',
+        username,
+        valid: false,
+        error: 'Channel not found'
+      }
+    }
+
+    return {
+      platform: 'kick',
+      username,
+      valid: true,
+      isLive: channel.livestream?.isLive || false,
+      avatar: channel.user?.profile_pic || null,
+      displayName: channel.user?.username || username,
+      viewerCount: channel.livestream?.viewer_count || 0,
+      category: channel.livestream?.categories?.[0]?.name || null
+    }
+  } catch {
     return {
       platform: 'kick',
       username,
