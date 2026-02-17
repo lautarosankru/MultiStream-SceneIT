@@ -152,12 +152,8 @@ export const useSceneStore = create<SceneState>()(
 
                 const COLS = 12
                 const TOTAL_ROWS = 24
-                const MARGIN = 10
                 const count = items.length
 
-                // Calculate optimal grid dimensions
-                // Leave margin for safety - use 90% of available space
-                const usableRows = Math.floor(TOTAL_ROWS * 0.9)
                 let cols: number, rows: number
 
                 if (count === 1) {
@@ -179,9 +175,9 @@ export const useSceneStore = create<SceneState>()(
                     rows = Math.ceil(count / cols)
                 }
 
-                // Calculate item dimensions with safety margin
+                // Use full grid - TOTAL_ROWS
                 const itemWidth = Math.floor(COLS / cols)
-                const itemHeight = Math.floor(usableRows / rows)
+                const itemHeight = Math.floor(TOTAL_ROWS / rows)
 
                 const newItems = items.map((item, index) => {
                     const row = Math.floor(index / cols)
@@ -192,7 +188,7 @@ export const useSceneStore = create<SceneState>()(
 
                     // Ensure items don't exceed grid boundaries
                     const w = Math.min(itemWidth, COLS - x)
-                    const h = Math.min(itemHeight, usableRows - y)
+                    const h = Math.min(itemHeight, TOTAL_ROWS - y)
 
                     return {
                         ...item,

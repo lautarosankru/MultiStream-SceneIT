@@ -68,33 +68,55 @@ export function SceneGrid() {
         }
     }, [items, isLocked, layoutMode])
 
-    // Validate and update layout - prevent items from going below viewport
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    const onLayoutChange = useCallback((currentLayout: any) => {
-        if (!isLocked) {
-            // Strict validation: clamp all items within MAX_ROWS boundary
-            const validatedLayout = currentLayout.map((item: any) => {
-                // Calculate maximum Y position (so item doesn't go below bottom)
-                const maxY = Math.max(0, GRID_CONFIG.MAX_ROWS - item.h)
-                // Calculate maximum height available from current Y position
-                const maxAvailableH = Math.max(2, GRID_CONFIG.MAX_ROWS - item.y)
-                
-                // Clamp Y position
-                const clampedY = Math.min(item.y, maxY)
-                // Clamp height to available space
-                const clampedH = Math.min(item.h, maxAvailableH)
+    // Validate layout when items change - ensures they stay within viewport
+    useEffect(() => {
+        if (items.length === 0) return
+
+        const hasInvalidItems = items.some(item => {
+            const { x, y, w, h } = item.layout
+            return y + h > GRID_CONFIG.MAX_ROWS || x + w > GRID_CONFIG.COLS
+        })
+
+        if (hasInvalidItems) {
+            const newLayout = items.map(item => {
+                const { x, y, w, h } = item.layout
+                // Clamp to stay within grid
+                const clampedY = Math.max(0, Math.min(y, GRID_CONFIG.MAX_ROWS - h))
+                const clampedH = Math.min(h, GRID_CONFIG.MAX_ROWS - clampedY)
+                const clampedX = Math.max(0, Math.min(x, GRID_CONFIG.COLS - w))
+                const clampedW = Math.min(w, GRID_CONFIG.COLS - clampedX)
 
                 return {
-                    ...item,
+                    i: item.id,
+                    x: clampedX,
                     y: clampedY,
-                    h: clampedH,
-                    x: Math.max(0, Math.min(item.x, GRID_CONFIG.COLS - item.w)),
-                    w: Math.min(item.w, GRID_CONFIG.COLS - item.x)
+                    w: clampedW,
+                    h: Math.max(2, clampedH),
+                    minW: 2,
+                    minH: 2
                 }
-            });
-            updateLayout(validatedLayout)
+            })
+            updateLayout(newLayout)
         }
-    }, [isLocked, updateLayout])
+    }, [items.length])
+
+    // Handle layout changes - clamp items within viewport
+    const onLayoutChange = useCallback((currentLayout: any) => {
+        const validatedLayout = currentLayout.map((item: any) => {
+            const maxY = GRID_CONFIG.MAX_ROWS - item.h
+            const clampedY = Math.max(0, Math.min(item.y, maxY))
+            const clampedH = Math.min(item.h, GRID_CONFIG.MAX_ROWS - clampedY)
+
+            return {
+                ...item,
+                y: clampedY,
+                h: Math.max(2, clampedH),
+                x: Math.max(0, Math.min(item.x, GRID_CONFIG.COLS - item.w)),
+                w: Math.min(item.w, GRID_CONFIG.COLS - item.x)
+            }
+        })
+        updateLayout(validatedLayout)
+    }, [updateLayout])
 
     if (!mounted) return <div ref={containerRef} className="w-full h-full bg-transparent" />
 
