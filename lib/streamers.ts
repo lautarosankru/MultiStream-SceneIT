@@ -28,16 +28,46 @@ export interface ValidationResult {
  */
 export async function validateKickChannel(username: string): Promise<ValidationResult> {
   try {
-    const res = await fetch(`https://kick.com/api/v2/channels/${username}`, {
+    // Use the authenticated API for better reliability
+    const res = await fetch(`https://api.kick.com/public/v1/channels/${username}`, {
       next: { revalidate: 300 }
     })
 
     if (!res.ok) {
+      // Fallback to v2 if public v1 fails
+      const fallbackRes = await fetch(`https://kick.com/api/v2/channels/${username}`, {
+        next: { revalidate: 300 }
+      })
+      
+      if (!fallbackRes.ok) {
+        return {
+          platform: 'kick',
+          username,
+          valid: false,
+          error: 'Channel not found'
+        }
+      }
+      
+      const channel = await fallbackRes.json()
+      
+      if (!channel.id) {
+        return {
+          platform: 'kick',
+          username,
+          valid: false,
+          error: 'Channel not found'
+        }
+      }
+      
       return {
         platform: 'kick',
         username,
-        valid: false,
-        error: 'Channel not found'
+        valid: true,
+        isLive: channel.livestream?.isLive || false,
+        avatar: channel.user?.profile_pic || null,
+        displayName: channel.user?.username || username,
+        viewerCount: channel.livestream?.viewer_count || 0,
+        category: channel.livestream?.categories?.[0]?.name || null
       }
     }
 

@@ -67,14 +67,13 @@ export function KickConnectButton() {
         window.location.href = '/api/auth/kick'
     }
 
-    const handleLogout = () => {
-        // Clear cookie via API? Or just clear local state?
-        // Ideally call an endpoint to delete cookie.
-        // For now, clear state.
+    const handleLogout = async () => {
+        try {
+            await fetch('/api/auth/kick/logout', { method: 'POST' })
+        } catch (e) {
+            // Ignore errors
+        }
         setKickUser(null)
-        // Optional: call /api/auth/kick/logout to clear cookies
-        document.cookie = 'kick_access_token=; Max-Age=0; path=/;'
-        document.cookie = 'kick_refresh_token=; Max-Age=0; path=/;'
         toast.success("Desconectado de Kick")
     }
 
