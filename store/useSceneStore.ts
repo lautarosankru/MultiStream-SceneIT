@@ -64,34 +64,7 @@ export const useSceneStore = create<SceneState>()(
                 const { platform, sourceId } = parseStreamUrl(url)
                 const id = generateId()
 
-                const TOTAL_ROWS = 24
-                const DEFAULT_H = 9
-                const DEFAULT_W = 4
-
-                // Calculate position based on existing items
-                const currentItems = get().items
-                let y = 0
-                let x = 0
-
-                if (currentItems.length > 0) {
-                    // Find the lowest point in the grid
-                    const maxY = Math.max(...currentItems.map(i => i.layout.y + i.layout.h))
-                    
-                    // If adding at maxY would exceed viewport, try to find empty space
-                    if (maxY + DEFAULT_H > TOTAL_ROWS) {
-                        // Try to fit in available space or place at top
-                        y = 0
-                        x = 0
-                    } else {
-                        y = maxY
-                        x = 0
-                    }
-                }
-
-                // Ensure the item fits within bounds
-                const finalH = Math.min(DEFAULT_H, TOTAL_ROWS - y)
-                const finalW = Math.min(DEFAULT_W, 12 - x)
-
+                // Always add item with default layout - autoLayout will reposition it
                 const newItem: StreamItem = {
                     id,
                     type,
@@ -100,10 +73,10 @@ export const useSceneStore = create<SceneState>()(
                     isMuted: false,
                     layout: {
                         i: id,
-                        x,
-                        y,
-                        w: Math.max(2, finalW),
-                        h: Math.max(2, finalH),
+                        x: 0,
+                        y: 0,
+                        w: 4,
+                        h: 9,
                         minW: 2,
                         minH: 2,
                     }
@@ -114,11 +87,8 @@ export const useSceneStore = create<SceneState>()(
                     activeChatId: id
                 }))
 
-                // Auto-layout if in auto mode (fixes layout not updating correctly)
-                const currentMode = get().layoutMode
-                if (currentMode === 'auto') {
-                    get().autoLayout()
-                }
+                // Always call autoLayout after adding - works for both 'auto' and 'spotlight' modes
+                get().autoLayout()
             },
 
             removeItem: (id: string) => {
@@ -180,10 +150,12 @@ export const useSceneStore = create<SceneState>()(
 
                 const COLS = 12
                 const TOTAL_ROWS = 24
+                const MARGIN = 10
                 const count = items.length
 
                 // Calculate optimal grid dimensions
-                // For 16:9 aspect ratio, we want cols/rows ≈ 16/9 = 1.78
+                // Leave margin for safety - use 90% of available space
+                const usableRows = Math.floor(TOTAL_ROWS * 0.9)
                 let cols: number, rows: number
 
                 if (count === 1) {
@@ -201,14 +173,13 @@ export const useSceneStore = create<SceneState>()(
                 } else if (count <= 16) {
                     cols = 4; rows = 4
                 } else {
-                    // For more items, calculate dynamically
                     cols = Math.ceil(Math.sqrt(count * 1.5))
                     rows = Math.ceil(count / cols)
                 }
 
-                // Calculate item dimensions
+                // Calculate item dimensions with safety margin
                 const itemWidth = Math.floor(COLS / cols)
-                const itemHeight = Math.floor(TOTAL_ROWS / rows)
+                const itemHeight = Math.floor(usableRows / rows)
 
                 const newItems = items.map((item, index) => {
                     const row = Math.floor(index / cols)
@@ -219,7 +190,7 @@ export const useSceneStore = create<SceneState>()(
 
                     // Ensure items don't exceed grid boundaries
                     const w = Math.min(itemWidth, COLS - x)
-                    const h = Math.min(itemHeight, TOTAL_ROWS - y)
+                    const h = Math.min(itemHeight, usableRows - y)
 
                     return {
                         ...item,
