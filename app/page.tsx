@@ -79,7 +79,7 @@ function HomeContent() {
           type: 'video' as const,
           platform: result.platform as 'kick' | 'twitch' | 'youtube',
           sourceId: result.username,
-          isMuted: index !== 0,
+
           layout: {
             i: `stream-${Date.now()}-${index}`,
             x: (index % cols) * (12 / cols),

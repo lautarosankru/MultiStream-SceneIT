@@ -9,7 +9,7 @@ function TwitchEmbedComponent({ item }: { item: StreamItem }) {
 
     if (!hostname) return <div className="w-full h-full bg-slate-900 animate-pulse" />
 
-    const src = `https://player.twitch.tv/?channel=${item.sourceId}&parent=${hostname}&muted=${item.isMuted}&autoplay=true&quality=chunked`
+    const src = `https://player.twitch.tv/?channel=${item.sourceId}&parent=${hostname}&autoplay=true&quality=chunked`
 
     return (
         <iframe

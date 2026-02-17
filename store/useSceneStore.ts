@@ -25,7 +25,7 @@ interface SceneState {
     addItem: (url: string, type?: ItemType) => void;
     removeItem: (id: string) => void;
     updateLayout: (layout: StreamLayout[]) => void;
-    toggleMute: (id: string) => void;
+
     toggleLock: () => void;
     setDragging: (isDragging: boolean) => void;
     setItems: (items: StreamItem[]) => void;
@@ -67,7 +67,7 @@ export const useSceneStore = create<SceneState>()(
                     type,
                     platform,
                     sourceId,
-                    isMuted: false,
+
                     layout: {
                         i: id,
                         x: 0,
@@ -126,21 +126,15 @@ export const useSceneStore = create<SceneState>()(
                         }
                         return item
                     })
-                    
+
                     // Apply universal clamping rules to all items
                     const clampedItems = clampLayoutItems(updatedItems)
-                    
+
                     return { items: clampedItems }
                 })
             },
 
-            toggleMute: (id: string) => {
-                set((state) => ({
-                    items: state.items.map((i) =>
-                        i.id === id ? { ...i, isMuted: !i.isMuted } : i
-                    ),
-                }))
-            },
+
 
             toggleLock: () => {
                 set((state) => ({ isLocked: !state.isLocked }))

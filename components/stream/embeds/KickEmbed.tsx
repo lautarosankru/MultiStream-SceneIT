@@ -9,7 +9,7 @@ function KickEmbedComponent({ item }: { item: StreamItem }) {
 
     if (!hostname) return <div className="w-full h-full bg-slate-900 animate-pulse" />
 
-    const src = `https://player.kick.cx/${item.sourceId}?autoplay=true&muted=${item.isMuted}&parent=${hostname}`
+    const src = `https://player.kick.cx/${item.sourceId}?autoplay=true&parent=${hostname}`
 
     return (
         <iframe

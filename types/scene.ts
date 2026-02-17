@@ -20,7 +20,7 @@ export interface StreamItem {
     type: ItemType;
     platform: StreamPlatform;
     sourceId: string; // channel name (Twitch/Kick) or VideoID (YT)
-    isMuted: boolean;
+
     layout: StreamLayout;
 }
 
