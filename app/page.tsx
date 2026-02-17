@@ -12,6 +12,7 @@ import { parseSlugs } from "@/lib/streamers"
 import { toast } from "sonner"
 import { Button } from "@/components/ui/button"
 import { ThemeToggle } from "@/components/ui/ThemeToggle"
+import { Header } from "@/components/layout/Header"
 import { LayoutTemplate, PanelRightOpen, PanelRightClose, Edit2, Loader2 } from "lucide-react"
 import { cn } from "@/lib/utils"
 import { EmptyState } from "@/components/grid/EmptyState"
@@ -27,8 +28,8 @@ function HomeContent() {
   const layoutParam = searchParams.get("layout")
   const layoutModeParam = searchParams.get("layoutMode")
   const usernamesParam = searchParams.get("s")
-  const { setItems, items, isLocked, toggleLock, isSidebarOpen, toggleSidebar, setLayoutMode } = useSceneStore()
-  
+  const { setItems, items, setLayoutMode } = useSceneStore()
+
   const [isLoaded, setIsLoaded] = useState(false)
   const [isLoadingStreamers, setIsLoadingStreamers] = useState(false)
   const [validationProgress, setValidationProgress] = useState<string | null>(null)
@@ -111,7 +112,7 @@ function HomeContent() {
 
     const streamers = parsedStreamers.map(s => s.username)
     const platforms = parsedStreamers.map(s => s.platform)
-    
+
     const redirectUrl = `/?s=${streamers.join(',')}&p=${platforms.join(',')}&layoutMode=auto`
     window.location.href = redirectUrl
   }, [])
@@ -159,7 +160,7 @@ function HomeContent() {
     if (!isLoaded || loadingRef.current) return
 
     const pathSegments = pathname.split('/').filter((s: string) => s && s.length > 0)
-    
+
     if (pathSegments.length > 0 && !usernamesParam) {
       loadFromFriendlyUrl(pathSegments)
     } else if (usernamesParam) {
@@ -169,63 +170,7 @@ function HomeContent() {
 
   return (
     <main className="h-screen w-full bg-background text-foreground flex flex-col overflow-hidden font-sans antialiased selection:bg-primary/30">
-      {/* Top Bar - Frutiger Aero Glass */}
-      <header className="h-16 flex items-center justify-between px-4 lg:px-6 border-b border-white/50 dark:border-white/5 bg-gradient-to-b from-white/70 to-white/40 dark:from-black/80 dark:to-black/60 backdrop-blur-md shrink-0 z-50 shadow-sm">
-        {/* Left: Branding */}
-        <div className="flex items-center gap-2 w-auto lg:w-40 group cursor-default shrink-0">
-          <div className="h-9 w-9 rounded-xl bg-gradient-to-br from-cyan-400 to-lime-400 flex items-center justify-center shadow-lg group-hover:scale-105 transition-all duration-300 ring-2 ring-white/50">
-            <LayoutTemplate className="h-5 w-5 text-white" />
-          </div>
-          <span className="font-bold text-lg text-blue-900 dark:text-white tracking-tight drop-shadow-sm hidden sm:inline">
-            Scene<span className="text-transparent bg-clip-text bg-gradient-to-r from-cyan-600 to-lime-600 dark:from-cyan-400 dark:to-lime-400 italic">It</span>
-          </span>
-          <TotalViewers />
-        </div>
-
-        {/* Center: Controls */}
-        <div className="flex-1 flex items-center justify-center mx-2">
-          <AddStream />
-        </div>
-
-        {/* Right: Actions */}
-        <div className="flex items-center gap-1 lg:gap-2 w-auto lg:w-44 justify-end shrink-0">
-          <Button
-            variant={!isLocked ? "secondary" : "ghost"}
-            size="sm"
-            onClick={toggleLock}
-            className={cn(
-              "h-9 px-4 gap-2 text-sm font-semibold transition-all duration-300 rounded-full",
-              !isLocked
-                ? "glossy-btn text-white ring-2 ring-white/50"
-                : "text-slate-600 hover:text-blue-900 hover:bg-white/40"
-            )}
-          >
-            <Edit2 className="h-4 w-4" />
-            <span className="hidden sm:inline">{!isLocked ? "Listo" : "Editar"}</span>
-          </Button>
-
-          <ShareButton />
-
-          <LayoutModeToggle />
-
-          <div className="w-px h-6 bg-slate-200 mx-1" />
-
-          <ThemeToggle />
-
-          <Button
-            variant="ghost"
-            size="icon"
-            onClick={toggleSidebar}
-            className={cn(
-              "h-9 w-9 transition-all duration-300 hover:bg-white/40 rounded-full",
-              isSidebarOpen ? "text-cyan-600 shadow-[0_0_15px_rgba(0,255,255,0.4)] bg-white/50" : "text-slate-600 dark:text-slate-400"
-            )}
-            title="Chat Sidebar"
-          >
-            {isSidebarOpen ? <PanelRightClose className="h-5 w-5" /> : <PanelRightOpen className="h-5 w-5" />}
-          </Button>
-        </div>
-      </header>
+      <Header />
 
       {/* Main Layout Area */}
       <div className="flex-1 flex overflow-hidden relative">
