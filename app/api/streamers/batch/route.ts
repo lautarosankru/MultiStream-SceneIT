@@ -36,10 +36,9 @@ export async function POST(request: Request) {
               platform: normalizedPlatform,
               username,
               valid: true,
-              isLive: null, // Unknown without API
+              isLive: undefined, // Unknown without API
               avatar: null,
-              displayName: username,
-              error: null
+              displayName: username
             }
           }
 

@@ -1,5 +1,4 @@
 import { useMemo, useCallback, useState, useEffect } from "react"
-// @ts-expect-error - definitions are missing named exports but they exist at runtime in ESM build
 import { Responsive, useContainerWidth } from "react-grid-layout"
 import { useSceneStore } from "@/store/useSceneStore"
 import { StreamWrapper } from "@/components/stream/StreamWrapper"
@@ -16,17 +15,6 @@ const GRID_CONFIG = {
 } as const
 
 type ResizeHandle = "s" | "w" | "e" | "n" | "sw" | "nw" | "se" | "ne";
-
-interface LayoutItem {
-    i: string;
-    x: number;
-    y: number;
-    w: number;
-    h: number;
-    minW?: number;
-    minH?: number;
-    static?: boolean;
-}
 
 export function SceneGrid() {
     const { items, updateLayout, isLocked, setDragging, layoutMode } = useSceneStore()
@@ -81,10 +69,11 @@ export function SceneGrid() {
     }, [items, isLocked, layoutMode])
 
     // Validate and update layout - prevent items from going below viewport
-    const onLayoutChange = useCallback((currentLayout: LayoutItem[]) => {
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const onLayoutChange = useCallback((currentLayout: any) => {
         if (!isLocked) {
             // Strict validation: clamp all items within MAX_ROWS boundary
-            const validatedLayout = currentLayout.map((item: LayoutItem) => {
+            const validatedLayout = currentLayout.map((item: any) => {
                 // Calculate maximum Y position (so item doesn't go below bottom)
                 const maxY = Math.max(0, GRID_CONFIG.MAX_ROWS - item.h)
                 // Calculate maximum height available from current Y position
@@ -126,10 +115,11 @@ export function SceneGrid() {
                 cols={{ lg: 12, md: 10, sm: 6, xs: 4, xxs: 2 }}
                 rowHeight={rowHeight}
                 maxRows={GRID_CONFIG.MAX_ROWS}
-                // @ts-expect-error - draggableHandle is supported but types are missing it in ResponsiveProps
+                // @ts-expect-error - draggableHandle is supported but types are missing
                 draggableHandle=".drag-handle"
                 resizeHandle={(axis: ResizeHandle, ref: React.Ref<HTMLElement>) => (
                     <div
+                        // @ts-expect-error - resizeHandle ref type mismatch
                         ref={ref}
                         className={cn(
                             `react-resizable-handle react-resizable-handle-${axis} z-50`,
