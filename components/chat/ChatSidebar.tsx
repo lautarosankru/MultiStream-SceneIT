@@ -4,13 +4,131 @@ import { useSceneStore } from "@/store/useSceneStore"
 import { useResizable } from "@/lib/hooks/useResizable"
 import { ChatEmbed } from "./embeds/ChatEmbed"
 import { cn } from "@/lib/utils"
-import { Button } from "@/components/ui/button"
-import { MessageSquare, RefreshCw } from "lucide-react"
-import { useEffect, useState } from "react"
+import { Popover, PopoverTrigger, PopoverContent } from "@/components/ui/popover"
+import { MessageSquare, RefreshCw, ChevronDown, Check } from "lucide-react"
+import { useEffect, useState, useCallback, useMemo } from "react"
 import { motion } from "framer-motion"
 
 const MIN_SIDEBAR_WIDTH = 280
 const MAX_SIDEBAR_WIDTH = 800
+
+const PLATFORM_COLORS: Record<string, { bg: string; text: string }> = {
+    twitch: { bg: 'bg-[#9146FF]', text: 'text-[#9146FF]' },
+    kick: { bg: 'bg-[#53FC18]', text: 'text-[#53FC18]' },
+    youtube: { bg: 'bg-[#FF0000]', text: 'text-[#FF0000]' },
+}
+
+function ChatSelector({
+    items,
+    activeChatId,
+    onSelect,
+    onReload,
+}: {
+    items: Array<{ id: string; sourceId: string; platform: string }>
+    activeChatId: string | null
+    onSelect: (id: string) => void
+    onReload: () => void
+}) {
+    const [isOpen, setIsOpen] = useState(false)
+
+    const activeItem = useMemo(
+        () => items.find(i => i.id === activeChatId),
+        [items, activeChatId]
+    )
+
+    const handleSelect = useCallback((id: string) => {
+        onSelect(id)
+        setIsOpen(false)
+    }, [onSelect])
+
+    const platformStyle = activeItem ? PLATFORM_COLORS[activeItem.platform] : null
+
+    return (
+        <Popover open={isOpen} onOpenChange={setIsOpen}>
+            <PopoverTrigger asChild>
+                <button
+                    className={cn(
+                        "flex items-center gap-2 px-3 py-2 text-sm font-bold transition-all relative group rounded-lg border border-transparent",
+                        "bg-white/60 dark:bg-white/10 text-slate-800 dark:text-slate-100",
+                        "hover:bg-white/80 dark:hover:bg-white/20",
+                        "ring-1 ring-white/60 dark:ring-white/10",
+                        "focus:outline-none focus:ring-2 focus:ring-cyan-400/50"
+                    )}
+                >
+                    {activeItem ? (
+                        <>
+                            {platformStyle && (
+                                <span className={cn(
+                                    "w-2.5 h-2.5 rounded-full shadow-[0_0_6px_currentColor]",
+                                    platformStyle.bg,
+                                    platformStyle.text
+                                )} />
+                            )}
+                            <span className="truncate max-w-[100px]">{activeItem.sourceId}</span>
+                            <ChevronDown className="h-4 w-4 text-slate-500 dark:text-slate-400 ml-1" />
+                        </>
+                    ) : (
+                        <>
+                            <MessageSquare className="h-4 w-4" />
+                            <span>Seleccionar chat</span>
+                            <ChevronDown className="h-4 w-4 text-slate-500 dark:text-slate-400 ml-1" />
+                        </>
+                    )}
+                </button>
+            </PopoverTrigger>
+
+            <PopoverContent
+                align="start"
+                sideOffset={8}
+                className="w-64 p-1.5 bg-white/95 dark:bg-slate-900/95 backdrop-blur-xl border border-white/20 dark:border-white/10 shadow-2xl rounded-xl"
+            >
+                <div className="flex flex-col gap-0.5 max-h-72 overflow-y-auto">
+                    {items.map((item) => {
+                        const isActive = item.id === activeChatId
+                        const pStyle = PLATFORM_COLORS[item.platform]
+
+                        return (
+                            <button
+                                key={item.id}
+                                onClick={() => handleSelect(item.id)}
+                                className={cn(
+                                    "flex items-center gap-3 px-3 py-2.5 text-sm font-medium transition-all rounded-lg text-left",
+                                    isActive
+                                        ? "bg-cyan-500/10 dark:bg-cyan-500/20 text-cyan-900 dark:text-cyan-100"
+                                        : "text-slate-700 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-white/10"
+                                )}
+                            >
+                                {pStyle && (
+                                    <span className={cn(
+                                        "w-2.5 h-2.5 rounded-full shrink-0",
+                                        pStyle.bg
+                                    )} />
+                                )}
+                                <span className="flex-1 truncate">{item.sourceId}</span>
+                                {isActive && (
+                                    <Check className="h-4 w-4 text-cyan-600 dark:text-cyan-400 shrink-0" />
+                                )}
+                            </button>
+                        )
+                    })}
+                </div>
+
+                <div className="mt-2 pt-2 border-t border-slate-200/50 dark:border-white/10">
+                    <button
+                        onClick={() => {
+                            onReload()
+                            setIsOpen(false)
+                        }}
+                        className="flex items-center gap-2 w-full px-3 py-2 text-sm text-slate-600 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-white/10 rounded-lg transition-colors"
+                    >
+                        <RefreshCw className="h-4 w-4" />
+                        <span>Recargar chat</span>
+                    </button>
+                </div>
+            </PopoverContent>
+        </Popover>
+    )
+}
 
 export function ChatSidebar() {
     const {
@@ -64,43 +182,17 @@ export function ChatSidebar() {
             <div {...resizeHandleProps} />
 
             {/* Glossy Header */}
-            <div className="h-12 flex items-center px-2 gap-2 bg-white/60 to-white/30 dark:bg-black/90 border-b border-white/50 dark:border-white/10 backdrop-blur-md shadow-sm">
-                <div className="flex-1 flex gap-1 overflow-x-auto no-scrollbar mask-linear py-1">
-                    {items.map((item) => (
-                        <button
-                            key={item.id}
-                            onClick={() => setActiveChat(item.id)}
-                            className={cn(
-                                "flex items-center gap-2 px-3 py-1.5 text-xs font-bold transition-all relative group shrink-0 rounded-full border border-transparent",
-                                activeChatId === item.id
-                                    ? "bg-white/60 dark:bg-white/10 text-blue-900 dark:text-cyan-400 shadow-sm border-white/50 dark:border-white/10 ring-1 ring-white/60 dark:ring-white/5"
-                                    : "text-slate-600 dark:text-slate-400 hover:text-blue-800 dark:hover:text-cyan-300 hover:bg-white/30 dark:hover:bg-white/5"
-                            )}
-                        >
-                            {/* Platform Icon Dot with Glow */}
-                            <span className={cn(
-                                "w-2 h-2 rounded-full shadow-[0_0_5px_currentColor]",
-                                item.platform === 'twitch' ? 'bg-[#9146FF] text-[#9146FF]' :
-                                    item.platform === 'kick' ? 'bg-[#53FC18] text-[#53FC18]' :
-                                        item.platform === 'youtube' ? 'bg-[#FF0000] text-[#FF0000]' : 'bg-gray-500 text-gray-500'
-                            )} />
-                            <span className="truncate max-w-[80px]">{item.sourceId}</span>
-                        </button>
-                    ))}
-                </div>
-
-                {/* Actions */}
-                <div className="flex items-center pl-2 border-l border-white/30">
-                    <Button
-                        variant="ghost"
-                        size="icon"
-                        className="h-8 w-8 text-slate-600 hover:text-blue-900 hover:bg-white/40 rounded-full transition-all"
-                        onClick={handleReload}
-                        title="Recargar Chat"
-                    >
-                        <RefreshCw className="h-4 w-4" />
-                    </Button>
-                </div>
+            <div className="h-14 flex items-center px-3 gap-3 bg-white/60 to-white/30 dark:bg-black/90 border-b border-white/50 dark:border-white/10 backdrop-blur-md shadow-sm">
+                <ChatSelector
+                    items={items.map(item => ({
+                        id: item.id,
+                        sourceId: item.sourceId,
+                        platform: item.platform
+                    }))}
+                    activeChatId={activeChatId}
+                    onSelect={setActiveChat}
+                    onReload={handleReload}
+                />
             </div>
 
             {/* Chat Content */}
