@@ -39,14 +39,12 @@ export function useKickChat(channelSlug: string) {
             }
 
             const sseUrl = `/api/stream/sse/${chatroomId}`;
-            console.log(`Connecting to SSE: ${sseUrl}`);
 
             const evtSource = new EventSource(sseUrl);
             eventSourceRef.current = evtSource;
 
             evtSource.onopen = () => {
                 setStatus('connected');
-                console.log("SSE Connected");
             };
 
             evtSource.onmessage = (event) => {
@@ -84,21 +82,27 @@ export function useKickChat(channelSlug: string) {
     }, [channelSlug]);
 
     useEffect(() => {
-        if (channelSlug) {
-            connect();
-        }
-
-        return () => {
+        // Cleanup function
+        const cleanup = () => {
             if (eventSourceRef.current) {
-                eventSourceRef.current.close();
-                eventSourceRef.current = null;
+                eventSourceRef.current.close()
+                eventSourceRef.current = null
             }
             if (abortControllerRef.current) {
-                abortControllerRef.current.abort();
-                abortControllerRef.current = null;
+                abortControllerRef.current.abort()
+                abortControllerRef.current = null
             }
-        };
-    }, [channelSlug, connect]);
+            setMessages([])
+            setStatus('connecting')
+        }
+
+        if (channelSlug) {
+            cleanup()
+            connect()
+        }
+
+        return cleanup
+    }, [channelSlug]);
 
     return { messages, status };
 }

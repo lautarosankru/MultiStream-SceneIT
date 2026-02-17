@@ -39,25 +39,35 @@ export function parseStreamUrl(url: string): { platform: StreamPlatform; sourceI
 
     // YouTube
     if (hostname.includes('youtube.com') || hostname.includes('youtu.be')) {
-      const searchParams = urlObj.searchParams
-      if (searchParams.has('v')) {
-        return { platform: 'youtube', sourceId: searchParams.get('v')! }
-      }
-
+      // youtu.be/VIDEO_ID
       if (hostname.includes('youtu.be')) {
         const parts = pathname.split('/').filter(Boolean)
         if (parts.length > 0) return { platform: 'youtube', sourceId: parts[0] }
       }
 
+      // youtube.com/watch?v=VIDEO_ID
+      const searchParams = urlObj.searchParams
+      if (searchParams.has('v')) {
+        return { platform: 'youtube', sourceId: searchParams.get('v')! }
+      }
+
+      // youtube.com/live/VIDEO_ID or youtube.com/@username/live
       if (pathname.startsWith('/live/')) {
         const parts = pathname.split('/live/').filter(Boolean)
-        if (parts.length > 0) {
+        if (parts.length > 0 && parts[0]) {
           return { platform: 'youtube', sourceId: parts[0] }
         }
       }
 
+      // youtube.com/@username
       if (pathname.startsWith('/@')) {
         return { platform: 'youtube', sourceId: pathname }
+      }
+
+      // youtube.com/username/live
+      const pathParts = pathname.split('/').filter(Boolean)
+      if (pathParts.length >= 2 && pathParts[1] === 'live') {
+        return { platform: 'youtube', sourceId: pathParts[0] }
       }
     }
 

@@ -15,8 +15,22 @@ export async function POST(request: Request) {
     const body = await request.json()
     const streamers: StreamerInput[] = body.streamers || []
 
-    if (streamers.length === 0) {
-      return NextResponse.json({ error: 'No streamers provided' }, { status: 400 })
+    if (!Array.isArray(streamers) || streamers.length === 0) {
+      return NextResponse.json({ error: 'Invalid or empty streamers array' }, { status: 400 })
+    }
+
+    if (streamers.length > 50) {
+      return NextResponse.json({ error: 'Too many streamers (max 50)' }, { status: 400 })
+    }
+
+    // Validate each streamer has required fields
+    for (const streamer of streamers) {
+      if (!streamer || typeof streamer !== 'object') {
+        return NextResponse.json({ error: 'Invalid streamer format' }, { status: 400 })
+      }
+      if (typeof streamer.username !== 'string' || !streamer.username.trim()) {
+        return NextResponse.json({ error: 'Invalid username' }, { status: 400 })
+      }
     }
 
     // Validate all streamers in parallel

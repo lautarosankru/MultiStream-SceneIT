@@ -32,28 +32,18 @@ function HomeContent() {
   const [validationProgress, setValidationProgress] = useState<string | null>(null)
   const loadingRef = useRef(false)
 
-  const loadFromFriendlyUrl = useCallback(async (pathSegments: string[]) => {
-    if (loadingRef.current) return
+  const processStreamers = useCallback(async (parsedStreamers: { platform: string; username: string }[]) => {
+    if (loadingRef.current || parsedStreamers.length === 0) return
     loadingRef.current = true
     setIsLoadingStreamers(true)
 
     try {
-      const parsedStreamers = parseSlugs(pathSegments)
-
-      if (parsedStreamers.length === 0) {
-        setIsLoadingStreamers(false)
-        loadingRef.current = false
-        return
-      }
-
       setValidationProgress(`Validando ${parsedStreamers.length} streamer(s)...`)
 
       const response = await fetch('/api/streamers/batch', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          streamers: parsedStreamers.map(s => ({ platform: s.platform, username: s.username }))
-        })
+        body: JSON.stringify({ streamers: parsedStreamers })
       })
 
       if (!response.ok) {
@@ -103,7 +93,7 @@ function HomeContent() {
       toast.success(`${validResults.length} stream(s) cargado(s)`)
 
     } catch (error) {
-      console.error('[SceneIt] Error loading from friendly URL:', error)
+      console.error('[SceneIt] Error loading streamers:', error)
       toast.error("Error al cargar los streams")
     } finally {
       setIsLoadingStreamers(false)
@@ -112,90 +102,33 @@ function HomeContent() {
     }
   }, [setItems])
 
+  const loadFromFriendlyUrl = useCallback(async (pathSegments: string[]) => {
+    const parsedStreamers = parseSlugs(pathSegments)
+    if (parsedStreamers.length === 0) return
+
+    const streamers = parsedStreamers.map(s => s.username)
+    const platforms = parsedStreamers.map(s => s.platform)
+    
+    const redirectUrl = `/?s=${streamers.join(',')}&p=${platforms.join(',')}`
+    window.location.href = redirectUrl
+  }, [])
+
   const loadFromStreamersParam = useCallback(async () => {
     if (!usernamesParam || loadingRef.current) return
-    loadingRef.current = true
-    setIsLoadingStreamers(true)
 
-    try {
-      const usernames = usernamesParam.split(',').filter((s: string) => s.length > 0)
-      const platformParam = searchParams.get("p")
-      const platforms = platformParam ? platformParam.split(',').filter((s: string) => s.length > 0) : []
+    const usernames = usernamesParam.split(',').filter((s: string) => s.length > 0)
+    const platformParam = searchParams.get("p")
+    const platforms = platformParam ? platformParam.split(',').filter((s: string) => s.length > 0) : []
 
-      if (usernames.length === 0) {
-        setIsLoadingStreamers(false)
-        loadingRef.current = false
-        return
-      }
+    if (usernames.length === 0) return
 
-      setValidationProgress(`Validando ${usernames.length} streamer(s)...`)
+    const streamersToValidate = usernames.map((username: string, index: number) => ({
+      platform: platforms[index] || 'kick',
+      username
+    }))
 
-      const streamersToValidate = usernames.map((username: string, index: number) => ({
-        platform: platforms[index] || 'kick',
-        username
-      }))
-
-      const response = await fetch('/api/streamers/batch', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ streamers: streamersToValidate })
-      })
-
-      if (!response.ok) {
-        throw new Error('Validation failed')
-      }
-
-      const { results } = await response.json()
-      const validResults = Array.isArray(results) ? results.filter((r: ValidationResult) => r.valid) : []
-
-      if (validResults.length === 0) {
-        toast.error("Ningún streamer encontrado")
-        setValidationProgress(null)
-        loadingRef.current = false
-        return
-      }
-
-      const invalidResults = Array.isArray(results) ? results.filter((r: ValidationResult) => !r.valid) : []
-      if (invalidResults.length > 0) {
-        invalidResults.forEach((r: ValidationResult) => {
-          toast.error(`"${r.username}" no encontrado en ${r.platform}`)
-        })
-      }
-
-      const streamItems: StreamItem[] = validResults.map((result: ValidationResult, index: number) => {
-        const cols = Math.ceil(Math.sqrt(validResults.length))
-        const rows = Math.ceil(validResults.length / cols)
-
-        return {
-          id: `stream-${Date.now()}-${index}`,
-          type: 'video' as const,
-          platform: result.platform as 'kick' | 'twitch' | 'youtube',
-          sourceId: result.username,
-          isMuted: index !== 0,
-          layout: {
-            i: `stream-${Date.now()}-${index}`,
-            x: (index % cols) * (12 / cols),
-            y: Math.floor(index / cols) * (12 / rows),
-            w: Math.floor(12 / cols),
-            h: Math.floor(12 / rows),
-            minW: 3,
-            minH: 3
-          }
-        }
-      })
-
-      setItems(streamItems)
-      toast.success(`${validResults.length} stream(s) cargado(s)`)
-
-    } catch (error) {
-      console.error('[SceneIt] Error loading from streamers param:', error)
-      toast.error("Error al cargar los streams")
-    } finally {
-      setIsLoadingStreamers(false)
-      setValidationProgress(null)
-      loadingRef.current = false
-    }
-  }, [usernamesParam, searchParams, setItems])
+    await processStreamers(streamersToValidate)
+  }, [usernamesParam, searchParams, processStreamers])
 
   useEffect(() => {
     if (layoutParam && !isLoaded) {

@@ -106,12 +106,11 @@ export function SceneGrid() {
 
     // Handle layout changes - clamp only the item being resized, not all items
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    const onLayoutChange = useCallback((currentLayout: Layout) => {
+    const onLayoutChange = useCallback((currentLayout: any) => {
         // Only validate items that are being actively dragged/resized
         // We check which item has changed and clamp just that one
-        const validatedLayout = currentLayout.map((item: {
-            i: string; x: number; y: number; w: number; h: number;
-        }) => {
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        const validatedLayout = currentLayout.map((item: any) => {
             // Clamp to grid boundaries
             const maxY = GRID_CONFIG.MAX_ROWS - item.h
             const clampedY = Math.max(0, Math.min(item.y, maxY))
@@ -149,7 +148,7 @@ export function SceneGrid() {
                 cols={{ lg: 12, md: 10, sm: 6, xs: 4, xxs: 2 }}
                 rowHeight={rowHeight}
                 maxRows={GRID_CONFIG.MAX_ROWS}
-                // @ts-expect-error - draggableHandle is supported but types are missing
+                // @ts-expect-error - draggableHandle is supported but types are outdated
                 draggableHandle=".drag-handle"
                 resizeHandle={(axis: ResizeHandle, ref: React.Ref<HTMLElement>) => (
                     <div
