@@ -36,7 +36,7 @@ function HomeContent() {
   const pathname = usePathname()
   const layoutParam = searchParams.get("layout")
   const usernamesParam = searchParams.get("s") // usernames: ?s=coscu,coker&p=kick,twitch
-  const { setItems, items, isLocked, toggleLock, isSidebarOpen, toggleSidebar, chatSidebarWidth, setChatSidebarWidth, kickUser } = useSceneStore()
+  const { setItems, items, isLocked, toggleLock, isSidebarOpen, toggleSidebar } = useSceneStore()
   const [isLoaded, setIsLoaded] = useState(false)
   const [isLoadingStreamers, setIsLoadingStreamers] = useState(false)
   const [validationProgress, setValidationProgress] = useState<string | null>(null)

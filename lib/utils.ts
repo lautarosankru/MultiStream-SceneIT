@@ -1,6 +1,6 @@
 import { clsx, type ClassValue } from "clsx"
 import { twMerge } from "tailwind-merge"
-import { StreamPlatform, StreamItem } from "@/types/scene"
+import type { StreamPlatform } from "@/types/scene"
 
 export function cn(...inputs: ClassValue[]) {
   return twMerge(clsx(inputs))
@@ -39,19 +39,16 @@ export function parseStreamUrl(url: string): { platform: StreamPlatform; sourceI
 
     // YouTube
     if (hostname.includes('youtube.com') || hostname.includes('youtu.be')) {
-      // https://www.youtube.com/watch?v=VIDEO_ID
       const searchParams = urlObj.searchParams
       if (searchParams.has('v')) {
         return { platform: 'youtube', sourceId: searchParams.get('v')! }
       }
 
-      // https://youtu.be/VIDEO_ID
       if (hostname.includes('youtu.be')) {
         const parts = pathname.split('/').filter(Boolean)
         if (parts.length > 0) return { platform: 'youtube', sourceId: parts[0] }
       }
 
-      // https://www.youtube.com/live/VIDEO_ID
       if (pathname.startsWith('/live/')) {
         const parts = pathname.split('/live/').filter(Boolean)
         if (parts.length > 0) {
@@ -59,37 +56,14 @@ export function parseStreamUrl(url: string): { platform: StreamPlatform; sourceI
         }
       }
 
-      // https://www.youtube.com/@channel
       if (pathname.startsWith('/@')) {
-        return { platform: 'youtube', sourceId: pathname } // Retain @ for channel embeds if supported, or need to resolve to ID.
-        // For now, let's assume we pass the full channel identifier for channel embeds
+        return { platform: 'youtube', sourceId: pathname }
       }
     }
 
-    // Custom / Fallback
     return { platform: 'custom', sourceId: url }
 
-  } catch (e) {
+  } catch {
     return { platform: 'custom', sourceId: url }
-  }
-}
-
-export function serializeLayout(items: StreamItem[]): string {
-  try {
-    const json = JSON.stringify(items)
-    return btoa(json)
-  } catch (e) {
-    console.error("Failed to serialize", e)
-    return ""
-  }
-}
-
-export function deserializeLayout(hash: string): StreamItem[] {
-  try {
-    const json = atob(hash)
-    return JSON.parse(json)
-  } catch (e) {
-    console.error("Failed to deserialize", e)
-    return []
   }
 }

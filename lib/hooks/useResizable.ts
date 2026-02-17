@@ -36,7 +36,7 @@ export function useResizable({
     const [width, setWidth] = useState(initialWidth)
     const [isDragging, setIsDragging] = useState(false)
     const startXRef = useRef(0)
-    const startWidthRef = useRef(0)
+    const startWidthRef = useRef(initialWidth)
     const currentWidthRef = useRef(initialWidth)
     const onResizeRef = useRef(onResize)
     const onResizeEndRef = useRef(onResizeEnd)
@@ -49,16 +49,17 @@ export function useResizable({
         onResizeStartRef.current = onResizeStart
     }, [onResize, onResizeEnd, onResizeStart])
 
-    // Sync with external width changes (e.g., from store rehydration or viewport resize)
+    // Initialize after mount and sync with external changes
     useEffect(() => {
-        if (!isDragging && initialWidth !== width) {
+        if (initialWidth !== width && !isDragging) {
             setWidth(initialWidth)
             currentWidthRef.current = initialWidth
         }
-    }, [initialWidth, isDragging])
+    }, [initialWidth])
 
     const handleMouseDown = useCallback((e: React.MouseEvent) => {
         e.preventDefault()
+        e.stopPropagation()
         setIsDragging(true)
         startXRef.current = e.clientX
         startWidthRef.current = currentWidthRef.current
@@ -95,24 +96,25 @@ export function useResizable({
 
         const handleMouseUp = () => {
             setIsDragging(false)
+            cleanup()
+            onResizeEndRef.current?.(currentWidthRef.current)
+        }
+
+        const cleanup = () => {
             document.body.style.userSelect = ''
             document.body.style.webkitUserSelect = ''
             document.body.style.cursor = ''
-            onResizeEndRef.current?.(currentWidthRef.current)
         }
 
         window.addEventListener('mousemove', handleMouseMove)
         window.addEventListener('mouseup', handleMouseUp)
-        window.addEventListener('mouseleave', handleMouseUp) // Cleanup si el mouse sale del viewport
+        window.addEventListener('mouseleave', handleMouseUp)
 
         return () => {
             window.removeEventListener('mousemove', handleMouseMove)
             window.removeEventListener('mouseup', handleMouseUp)
             window.removeEventListener('mouseleave', handleMouseUp)
-
-            document.body.style.userSelect = ''
-            document.body.style.webkitUserSelect = ''
-            document.body.style.cursor = ''
+            cleanup()
         }
     }, [isDragging, edge, minWidth, maxWidth])
 

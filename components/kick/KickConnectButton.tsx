@@ -9,27 +9,29 @@ import { toast } from "sonner"
 
 export function KickConnectButton() {
     const { kickUser, setKickUser } = useSceneStore()
-    const [isLoading, setIsLoading] = useState(false)
     const searchParams = useSearchParams()
     const router = useRouter()
+    
+    const [loadingState, setLoadingState] = useState(false)
+    const [initialized, setInitialized] = useState(false)
 
-    // Check session on mount
+    // Check session on mount - with proper dependency
     useEffect(() => {
-        if (!kickUser) {
+        if (!kickUser && !initialized) {
+            setInitialized(true)
             fetch('/api/auth/kick/me')
                 .then(res => {
                     if (res.ok) return res.json()
-                    // If 401 or error, we are not logged in
                     return null
                 })
                 .then(data => {
-                    if (data) setKickUser(data)
+                    if (data && !data.error) setKickUser(data)
                 })
                 .catch(() => {
                     // Ignore error, just not logged in
                 })
         }
-    }, [])
+    }, [kickUser, setKickUser, initialized])
 
     // Handle OAuth Callback Success/Error from URL
     useEffect(() => {
@@ -37,8 +39,7 @@ export function KickConnectButton() {
         const error = searchParams.get('error')
 
         if (success === 'kick_connected') {
-            // Fetch user data
-            setIsLoading(true)
+            setLoadingState(true)
             fetch('/api/auth/kick/me')
                 .then(res => {
                     if (res.ok) return res.json()
@@ -47,23 +48,22 @@ export function KickConnectButton() {
                 .then(data => {
                     setKickUser(data)
                     toast.success("Conectado a Kick correctamente")
-                    // Clean URL
                     router.replace('/')
                 })
                 .catch(err => {
                     console.error(err)
-                    // toast.error("Error al obtener datos de usuario") 
-                    // Suppress error toast to avoid spam on initial load/redirect if strict mode
+                    toast.error("Error al conectar con Kick")
+                    router.replace('/')
                 })
-                .finally(() => setIsLoading(false))
+                .finally(() => setLoadingState(false))
         } else if (error) {
             toast.error(`Error de conexión: ${error}`)
             router.replace('/')
         }
-    }, [searchParams, router, setKickUser]) // Removed kickUser dependency to avoid loop if ensuring sync
+    }, [searchParams, router, setKickUser])
 
     const handleLogin = () => {
-        setIsLoading(true)
+        setLoadingState(true)
         window.location.href = '/api/auth/kick'
     }
 
@@ -98,10 +98,10 @@ export function KickConnectButton() {
     return (
         <Button
             onClick={handleLogin}
-            disabled={isLoading}
+            disabled={loadingState}
             className="bg-[#53FC18] text-black hover:bg-[#42ca13] font-bold"
         >
-            {isLoading ? <Loader2 className="h-4 w-4 animate-spin" /> : "Conectar Kick"}
+            {loadingState ? <Loader2 className="h-4 w-4 animate-spin" /> : "Conectar Kick"}
         </Button>
     )
 }

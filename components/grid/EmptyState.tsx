@@ -85,7 +85,7 @@ export function EmptyState() {
                 >
                     <PlusCircle className="h-5 w-5 text-cyan-600 dark:text-cyan-400 animate-pulse" />
                     <span className="text-sm font-semibold text-slate-700 dark:text-slate-300 uppercase tracking-widest">
-                        USA EL BOTÓN "ADD" PARA COMENZAR
+                        USA EL BOTÓN &quot;ADD&quot; PARA COMENZAR
                     </span>
                 </motion.div>
             </motion.div>

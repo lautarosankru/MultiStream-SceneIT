@@ -1,5 +1,5 @@
 import { NextResponse } from 'next/server'
-import { fetchKickAPI } from '@/lib/kick-auth'
+import { validateKickChannel, ValidationResult } from '@/lib/streamers'
 
 interface StreamerInput {
   platform: string
@@ -20,46 +20,13 @@ export async function POST(request: Request) {
 
     // Validate all streamers in parallel
     const results = await Promise.all(
-      streamers.map(async (streamer) => {
+      streamers.map(async (streamer): Promise<ValidationResult> => {
         const { platform, username } = streamer
         const normalizedPlatform = platform?.toLowerCase() || 'kick'
 
         try {
           if (normalizedPlatform === 'kick') {
-            const res = await fetch(`https://kick.com/api/v2/channels/${username}`, {
-              next: { revalidate: 300 }
-            } as any)
-
-            if (!res.ok) {
-              return {
-                platform: 'kick',
-                username,
-                valid: false,
-                error: 'Channel not found'
-              }
-            }
-
-            const channel = await res.json()
-
-            if (!channel.id) {
-              return {
-                platform: 'kick',
-                username,
-                valid: false,
-                error: 'Channel not found'
-              }
-            }
-
-            return {
-              platform: 'kick',
-              username,
-              valid: true,
-              isLive: channel.livestream?.isLive || false,
-              avatar: channel.user?.profile_pic || null,
-              displayName: channel.user?.username || username,
-              viewerCount: channel.livestream?.viewer_count || 0,
-              category: channel.livestream?.categories?.[0]?.name || null
-            }
+            return await validateKickChannel(username)
           }
 
           // For Twitch and YouTube, assume valid (the embed will handle validation)

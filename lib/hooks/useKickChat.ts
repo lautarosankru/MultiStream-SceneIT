@@ -10,6 +10,8 @@ export function useKickChat(channelSlug: string) {
         let mounted = true;
 
         const connect = async () => {
+            setStatus('connecting');
+            
             try {
                 // 1. Get Chatroom ID via our proxy
                 const res = await fetch(`/api/kick/${channelSlug}`);

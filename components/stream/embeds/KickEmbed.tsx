@@ -1,9 +1,17 @@
 "use client"
 
+import { useMemo } from "react"
 import type { StreamItem } from "@/types/scene"
 
 export function KickEmbed({ item }: { item: StreamItem }) {
-    const src = `https://player.kick.cx/${item.sourceId}?autoplay=true&muted=${item.isMuted}`
+    const parent = useMemo(() => {
+        if (typeof window !== "undefined") return window.location.hostname
+        return ""
+    }, [])
+
+    if (!parent) return <div className="w-full h-full bg-slate-900 animate-pulse" />
+
+    const src = `https://player.kick.cx/${item.sourceId}?autoplay=true&muted=${item.isMuted}&parent=${parent}`
 
     return (
         <iframe

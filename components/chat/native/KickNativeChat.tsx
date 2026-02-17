@@ -2,7 +2,6 @@ import { useRef, useEffect } from 'react';
 import { useKickChat } from '@/lib/hooks/useKickChat';
 import { StreamItem } from '@/types/scene';
 import { ScrollArea } from '@/components/ui/scroll-area';
-import { cn } from '@/lib/utils';
 import { Loader2, AlertCircle } from 'lucide-react';
 
 interface KickNativeChatProps {
@@ -11,7 +10,6 @@ interface KickNativeChatProps {
 
 export function KickNativeChat({ item }: KickNativeChatProps) {
     const { messages, status } = useKickChat(item.sourceId);
-    const scrollRef = useRef<HTMLDivElement>(null);
     const bottomRef = useRef<HTMLDivElement>(null);
 
     // Auto-scroll to bottom

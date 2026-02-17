@@ -1,5 +1,3 @@
-import type { Layout } from "react-grid-layout"
-
 // Re-export or define local to avoid RGL issues if needed, but if we just use defining props it's fine.
 // Actually, let's use the local definition to be safe as we did in useSceneStore
 export interface StreamLayout {

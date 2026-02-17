@@ -1,7 +1,7 @@
 import { create } from 'zustand'
 import { persist } from 'zustand/middleware'
 import { generateId, parseStreamUrl } from '@/lib/utils'
-import { StreamItem, StreamLayout, ItemType, StreamPlatform, LayoutMode } from '@/types/scene'
+import { StreamItem, StreamLayout, ItemType, LayoutMode } from '@/types/scene'
 import { KickUser } from '@/types/kick'
 
 interface SceneState {
@@ -113,6 +113,12 @@ export const useSceneStore = create<SceneState>()(
                     items: [...state.items, newItem],
                     activeChatId: id
                 }))
+
+                // Auto-layout if in auto mode (fixes layout not updating correctly)
+                const currentMode = get().layoutMode
+                if (currentMode === 'auto') {
+                    get().autoLayout()
+                }
             },
 
             removeItem: (id: string) => {

@@ -1,35 +1,27 @@
 "use client"
 
-import { useEffect, useState } from "react"
+import { useMemo } from "react"
 import { type StreamItem } from "@/types/scene"
+import { useTheme } from "next-themes"
 
 interface ChatEmbedProps {
     item: StreamItem
 }
 
-import { useTheme } from "next-themes"
-
 export function ChatEmbed({ item }: ChatEmbedProps) {
-    const [parent, setParent] = useState<string>("")
     const { resolvedTheme } = useTheme()
-    // Force re-render when theme changes to update iframe URL
-    const [mounted, setMounted] = useState(false)
 
-    useEffect(() => {
-        if (typeof window !== "undefined") {
-            setParent(window.location.hostname)
-        }
-        setMounted(true)
+    const parent = useMemo(() => {
+        if (typeof window !== "undefined") return window.location.hostname
+        return ""
     }, [])
 
-    if (!parent || !mounted) return <div className="w-full h-full bg-slate-900 animate-pulse" />
+    if (!parent) return <div className="w-full h-full bg-slate-900 animate-pulse" />
 
     const isDark = resolvedTheme === 'dark'
 
     switch (item.platform) {
         case 'twitch':
-            // Twitch Chat Embed
-            // Add &darkpopout if dark mode
             const twitchSrc = `https://www.twitch.tv/embed/${item.sourceId}/chat?parent=${parent}${isDark ? '&darkpopout' : ''}`
             return (
                 <iframe
@@ -41,7 +33,6 @@ export function ChatEmbed({ item }: ChatEmbedProps) {
             )
 
         case 'kick':
-            // Kick Chat via kick.cx proxy for better compatibility
             const kickSrc = `https://chat.kick.cx/embed/${item.sourceId}`
             return (
                 <iframe
@@ -52,8 +43,6 @@ export function ChatEmbed({ item }: ChatEmbedProps) {
             )
 
         case 'youtube':
-            // YouTube Live Chat
-            // Add &dark_theme=1 if dark mode
             const ytSrc = `https://www.youtube.com/live_chat?v=${item.sourceId}&embed_domain=${parent}${isDark ? '&dark_theme=1' : ''}`
             return (
                 <iframe

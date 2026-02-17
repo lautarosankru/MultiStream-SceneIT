@@ -1,5 +1,5 @@
 import { NextResponse } from 'next/server'
-import { fetchKickAPI } from '@/lib/kick-auth'
+import { validateKickChannel } from '@/lib/streamers'
 
 // Validate a single streamer
 // GET /api/streamers/validate?platform=kick&username=coscu
@@ -14,46 +14,16 @@ export async function GET(request: Request) {
   }
 
   try {
-    // Validate based on platform
     if (platform === 'kick') {
-      const res = await fetch(`https://kick.com/api/v2/channels/${username}`, {
-        next: { revalidate: 300 }
-      })
-
-      if (!res.ok) {
-        return NextResponse.json({ 
-          valid: false, 
-          platform: 'kick', 
-          username, 
-          error: 'Channel not found' 
-        }, { status: 200 })
-      }
-
-      const channel = await res.json()
+      const result = await validateKickChannel(username)
       
-      // Channel not found
-      if (!channel.id) {
-        return NextResponse.json({ 
-          valid: false, 
-          platform: 'kick', 
-          username, 
-          error: 'Channel not found' 
-        }, { status: 200 })
+      if (!result.valid) {
+        return NextResponse.json(result, { status: 200 })
       }
-
-      return NextResponse.json({
-        valid: true,
-        platform: 'kick',
-        username,
-        isLive: channel.livestream?.isLive || false,
-        avatar: channel.user?.profile_pic || null,
-        displayName: channel.user?.username || username,
-        viewerCount: channel.livestream?.viewer_count || 0,
-        category: channel.livestream?.categories?.[0]?.name || null
-      })
+      
+      return NextResponse.json(result)
     }
 
-    // Other platforms not implemented yet
     return NextResponse.json({ 
       valid: false, 
       platform, 

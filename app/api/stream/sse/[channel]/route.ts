@@ -1,6 +1,11 @@
 import { NextRequest } from 'next/server';
 import { streamEmitter, EVENTS } from '@/lib/kick-stream-emitter';
 
+interface ChatMessagePayload {
+    channel: string;
+    data: Record<string, unknown>;
+}
+
 // SSE Endpoint for Production
 // This will run on the VPS. 
 // Clients connect here to receive chat messages that the VPS receives via Webhooks.
@@ -19,7 +24,7 @@ export async function GET(req: NextRequest, { params }: { params: Promise<{ chan
     writer.write(encoder.encode(`: welcome to kick chat for channel ${channel}\n\n`));
 
     // 2. Define the message handler
-    const onMessage = (payload: any) => {
+    const onMessage = (payload: ChatMessagePayload) => {
         // payload: { channel: 'chatroom_123', data: { ... } }
         // We match by the channel ID (chatroom_id) passed in the URL path
         if (payload.channel === `chatroom_${channel}`) {
