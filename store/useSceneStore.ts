@@ -3,6 +3,41 @@ import { persist } from 'zustand/middleware'
 import { generateId, parseStreamUrl } from '@/lib/utils'
 import { StreamItem, StreamLayout, ItemType, LayoutMode } from '@/types/scene'
 
+// Constantes universales del grid
+const GRID_CONFIG = {
+    COLS: 12,
+    TOTAL_ROWS: 24,
+    MIN_W: 2,
+    MIN_H: 2
+} as const
+
+// Función helper universal para clonar y validar layout
+function clampLayoutItems(items: StreamItem[]): StreamItem[] {
+    return items.map(item => {
+        const { x, y, w, h } = item.layout
+        
+        // Clamp Y position
+        const clampedY = Math.max(0, Math.min(y, GRID_CONFIG.TOTAL_ROWS - h))
+        // Clamp height to stay within bounds
+        const clampedH = Math.min(h, GRID_CONFIG.TOTAL_ROWS - clampedY)
+        // Clamp X position  
+        const clampedX = Math.max(0, Math.min(x, GRID_CONFIG.COLS - w))
+        // Clamp width
+        const clampedW = Math.min(w, GRID_CONFIG.COLS - clampedX)
+
+        return {
+            ...item,
+            layout: {
+                ...item.layout,
+                x: clampedX,
+                y: clampedY,
+                w: Math.max(GRID_CONFIG.MIN_W, clampedW),
+                h: Math.max(GRID_CONFIG.MIN_H, clampedH)
+            }
+        }
+    })
+}
+
 interface SceneState {
     items: StreamItem[];
     isLocked: boolean;
@@ -106,8 +141,9 @@ export const useSceneStore = create<SceneState>()(
             },
 
             updateLayout: (newLayout: StreamLayout[]) => {
-                set((state) => ({
-                    items: state.items.map(item => {
+                set((state) => {
+                    // Apply new layout positions
+                    const updatedItems = state.items.map(item => {
                         const layoutItem = newLayout.find(l => l.i === item.id)
                         if (layoutItem) {
                             return {
@@ -123,7 +159,12 @@ export const useSceneStore = create<SceneState>()(
                         }
                         return item
                     })
-                }))
+                    
+                    // Apply universal clamping rules to all items
+                    const clampedItems = clampLayoutItems(updatedItems)
+                    
+                    return { items: clampedItems }
+                })
             },
 
             toggleMute: (id: string) => {
