@@ -87,8 +87,14 @@ export const useSceneStore = create<SceneState>()(
                     activeChatId: id
                 }))
 
-                // Always call autoLayout after adding - works for both 'auto' and 'spotlight' modes
-                get().autoLayout()
+                // Apply layout based on current mode
+                const currentMode = get().layoutMode
+                if (currentMode === 'auto') {
+                    get().autoLayout()
+                } else if (currentMode === 'spotlight') {
+                    get().spotlightLayout()
+                }
+                // 'custom' mode doesn't auto-arrange
             },
 
             removeItem: (id: string) => {
