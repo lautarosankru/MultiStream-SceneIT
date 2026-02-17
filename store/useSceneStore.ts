@@ -2,7 +2,6 @@ import { create } from 'zustand'
 import { persist } from 'zustand/middleware'
 import { generateId, parseStreamUrl } from '@/lib/utils'
 import { StreamItem, StreamLayout, ItemType, LayoutMode } from '@/types/scene'
-import { KickUser } from '@/types/kick'
 
 interface SceneState {
     items: StreamItem[];
@@ -38,10 +37,6 @@ interface SceneState {
     // Chat Actions
     setActiveChat: (id: string | null) => void;
     toggleSidebar: () => void;
-
-    // Kick Auth State
-    kickUser: KickUser | null;
-    setKickUser: (user: KickUser | null) => void;
 }
 
 
@@ -360,9 +355,6 @@ export const useSceneStore = create<SceneState>()(
 
                 set({ items: newItems })
             },
-
-            kickUser: null,
-            setKickUser: (user: KickUser | null) => set({ kickUser: user }),
         }),
         {
             name: 'scene-storage',
@@ -373,8 +365,6 @@ export const useSceneStore = create<SceneState>()(
                 backgroundId: state.backgroundId,
                 isLocked: state.isLocked,
                 chatSidebarWidth: state.chatSidebarWidth,
-                // Persistir datos básicos del usuario de Kick para mostrar UI mientras carga sesión
-                kickUser: state.kickUser,
             }),
             onRehydrateStorage: () => (state) => {
                 if (!state) return

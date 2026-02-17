@@ -6,7 +6,6 @@ import { SceneGrid } from "@/components/grid/SceneGrid"
 import { AddStream } from "@/components/grid/AddStream"
 import { ShareButton } from "@/components/grid/ShareButton"
 import { ChatSidebar } from "@/components/chat/ChatSidebar"
-import { KickConnectButton } from "@/components/kick/KickConnectButton"
 import { useSceneStore } from "@/store/useSceneStore"
 import { decompressLayout } from "@/lib/compression"
 import { parseSlugs } from "@/lib/streamers"
@@ -272,7 +271,6 @@ function HomeContent() {
 
         {/* Right: Actions */}
         <div className="flex items-center gap-1 lg:gap-2 w-auto lg:w-44 justify-end shrink-0">
-          <KickConnectButton />
           <Button
             variant={!isLocked ? "secondary" : "ghost"}
             size="sm"
