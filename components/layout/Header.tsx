@@ -11,7 +11,6 @@ import { LayoutModeToggle } from "@/components/grid/LayoutModeToggle"
 import { LayoutTemplate, PanelRightOpen, PanelRightClose, Edit2, Menu, X } from "lucide-react"
 import { cn } from "@/lib/utils"
 import { useState } from "react"
-import Link from "next/link"
 
 export function Header() {
     const { isLocked, toggleLock, isSidebarOpen, toggleSidebar } = useSceneStore()

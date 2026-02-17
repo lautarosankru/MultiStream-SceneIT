@@ -2,7 +2,6 @@
 
 import { memo } from "react"
 import type { StreamItem } from "@/types/scene"
-import { useEmbedHost } from "@/lib/hooks/useEmbedHost"
 
 function YouTubeEmbedComponent({ item }: { item: StreamItem }) {
     // Determine if it's a Channel ID (UC...) or a Video ID

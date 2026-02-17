@@ -2,7 +2,7 @@ import { create } from 'zustand'
 import { persist } from 'zustand/middleware'
 import { generateId, parseStreamUrl } from '@/lib/utils'
 import { StreamItem, StreamLayout, ItemType, LayoutMode } from '@/types/scene'
-import { GRID_CONFIG, DEFAULT_SIDEBAR_WIDTH, MAIN_STREAM_HEIGHT_RATIO } from '@/lib/config/grid'
+import { DEFAULT_SIDEBAR_WIDTH, MAIN_STREAM_HEIGHT_RATIO } from '@/lib/config/grid'
 import { clampLayoutItems } from '@/lib/layout-utils'
 
 interface SceneState {

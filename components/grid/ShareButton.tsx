@@ -5,7 +5,7 @@ import { useSceneStore } from "@/store/useSceneStore"
 import { compressLayout } from "@/lib/compression"
 import { generateFriendlyUrl } from "@/lib/streamers"
 import { Button } from "@/components/ui/button"
-import { Share2, Check, Copy } from "lucide-react"
+import { Share2, Check } from "lucide-react"
 import { toast } from "sonner"
 import { cn } from "@/lib/utils"
 
@@ -16,12 +16,12 @@ export function ShareButton() {
     // Generate friendly URL from current items
     const friendlyUrl = useMemo(() => {
         if (items.length === 0) return null
-        
+
         // Only generate friendly URL if all items are supported platforms
-        const supportedItems = items.filter(item => 
+        const supportedItems = items.filter(item =>
             ['kick', 'twitch', 'youtube'].includes(item.platform)
         )
-        
+
         if (supportedItems.length !== items.length) {
             return null // Some items are custom, use compressed URL instead
         }
@@ -51,7 +51,7 @@ export function ShareButton() {
 
         navigator.clipboard.writeText(url)
         setCopied(true)
-        
+
         if (friendlyUrl) {
             toast.success("Link copiado")
         } else {

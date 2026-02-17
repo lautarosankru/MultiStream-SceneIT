@@ -66,11 +66,9 @@ export function ChatSidebar() {
         if (!activeChatId && items.length > 0) {
             setActiveChat(items[0].id)
         }
-    }, [items.length, activeChatId, setActiveChat])
+    }, [items, activeChatId, setActiveChat])
 
     // Disable resize on mobile
-    const currentWidth = isMobile ? '100%' : width
-
     if (!isSidebarOpen) return <div className="hidden" />
 
     // Desktop: Resizable Sidebar

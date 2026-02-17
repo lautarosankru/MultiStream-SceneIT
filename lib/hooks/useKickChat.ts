@@ -12,14 +12,14 @@ export function useKickChat(channelSlug: string) {
 
     const connect = useCallback(async () => {
         setStatus('connecting');
-        
+
         // Cancel any in-flight request
         if (abortControllerRef.current) {
             abortControllerRef.current.abort();
         }
-        
+
         abortControllerRef.current = new AbortController();
-        
+
         try {
             // 1. Get Chatroom ID via our proxy
             const res = await fetch(`/api/kick/${channelSlug}`, {
@@ -66,22 +66,21 @@ export function useKickChat(channelSlug: string) {
                         if (prev.some(m => m.id === newMessage.id)) return prev;
                         return [...prev.slice(-(MAX_CHAT_MESSAGES - 1)), newMessage];
                     });
-                } catch (error) {
-                    console.error('[useKickChat] Error parsing SSE message:', error instanceof Error ? error.message : 'Unknown error');
+                } catch {
+                    // Silent fail for JSON parse errors
                 }
             };
 
             evtSource.onerror = () => {
                 console.error('[useKickChat] SSE connection error');
                 setStatus('error');
-                
+
                 // Attempt reconnection with exponential backoff
                 if (reconnectAttemptsRef.current < MAX_CHAT_RECONNECT_ATTEMPTS) {
                     reconnectAttemptsRef.current++;
                     const delay = CHAT_RECONNECT_DELAY_MS * Math.pow(2, reconnectAttemptsRef.current - 1);
-                    
+
                     reconnectTimeoutRef.current = setTimeout(() => {
-                        console.log(`[useKickChat] Reconnecting... (attempt ${reconnectAttemptsRef.current})`);
                         connect();
                     }, delay);
                 }

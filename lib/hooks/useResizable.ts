@@ -55,7 +55,8 @@ export function useResizable({
             setWidth(initialWidth)
             currentWidthRef.current = initialWidth
         }
-    }, [initialWidth, width, isDragging])
+        // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, [initialWidth, isDragging])
 
     const handleMouseDown = useCallback((e: React.MouseEvent) => {
         e.preventDefault()
