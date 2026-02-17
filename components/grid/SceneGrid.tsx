@@ -4,6 +4,8 @@ import { useSceneStore } from "@/store/useSceneStore"
 import { StreamWrapper } from "@/components/stream/StreamWrapper"
 import { cn } from "@/lib/utils"
 import { GRID_CONFIG } from "@/lib/config/grid"
+import { clampLayoutItem, hasInvalidLayouts } from "@/lib/layout-utils"
+import type { StreamLayout } from "@/types/scene"
 import "react-grid-layout/css/styles.css"
 import "react-resizable/css/styles.css"
 
@@ -11,7 +13,6 @@ type ResizeHandle = "s" | "w" | "e" | "n" | "sw" | "nw" | "se" | "ne";
 
 function getResizeHandleElement(
     handle: ResizeHandle,
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     ref: React.Ref<HTMLElement>
 ): React.ReactNode {
     const isCorner = handle.includes("w") || handle.includes("e");
@@ -126,74 +127,30 @@ export function SceneGrid() {
             return
         }
 
-        const hasInvalidItems = items.some(item => {
-            const { x, y, w, h } = item.layout
-            return y + h > GRID_CONFIG.MAX_ROWS || x + w > GRID_CONFIG.COLS
-        })
-
-        if (hasInvalidItems) {
-            const newLayout = items.map(item => {
-                const { x, y, w, h } = item.layout
-                const clampedY = Math.max(0, Math.min(y, GRID_CONFIG.MAX_ROWS - h))
-                const clampedH = Math.min(h, GRID_CONFIG.MAX_ROWS - clampedY)
-                const clampedX = Math.max(0, Math.min(x, GRID_CONFIG.COLS - w))
-                const clampedW = Math.min(w, GRID_CONFIG.COLS - clampedX)
-
-                return {
-                    i: item.id,
-                    x: clampedX,
-                    y: clampedY,
-                    w: clampedW,
-                    h: Math.max(2, clampedH),
-                    minW: 2,
-                    minH: 2
-                }
-            })
+        if (hasInvalidLayouts(items)) {
+            const newLayout: StreamLayout[] = items.map(item => ({
+                ...clampLayoutItem(item.layout),
+                i: item.id
+            }))
             updateLayout(newLayout)
         }
-    }, [items.length, layoutMode, updateLayout])
+    }, [items, layoutMode, updateLayout])
 
     // Handle layout changes - ONLY clamp boundaries, don't rearrange
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    const onLayoutChange = useCallback((currentLayout: any) => {
-        // In custom mode: preserve exact user positions, just clamp boundaries
-        if (layoutMode === 'custom') {
-            const validatedLayout = currentLayout.map((item: any) => {
-                // Only clamp to grid boundaries, don't change position/size
-                const clampedY = Math.max(0, Math.min(item.y, GRID_CONFIG.MAX_ROWS - item.h))
-                const clampedH = Math.min(item.h, GRID_CONFIG.MAX_ROWS - clampedY)
-                const clampedX = Math.max(0, Math.min(item.x, GRID_CONFIG.COLS - item.w))
-                const clampedW = Math.min(item.w, GRID_CONFIG.COLS - clampedX)
-
-                return {
-                    ...item,
-                    y: clampedY,
-                    h: Math.max(2, clampedH),
-                    x: clampedX,
-                    w: Math.max(2, clampedW)
-                }
-            })
-            updateLayout(validatedLayout)
-            return
-        }
-
-        // For auto/spotlight: validate but preserve the layout intent
-        const validatedLayout = currentLayout.map((item: any) => {
-            const clampedY = Math.max(0, Math.min(item.y, GRID_CONFIG.MAX_ROWS - item.h))
-            const clampedH = Math.min(item.h, GRID_CONFIG.MAX_ROWS - clampedY)
-            const clampedX = Math.max(0, Math.min(item.x, GRID_CONFIG.COLS - item.w))
-            const clampedW = Math.min(item.w, GRID_CONFIG.COLS - clampedX)
-
-            return {
-                ...item,
-                y: clampedY,
-                h: Math.max(2, clampedH),
-                x: clampedX,
-                w: Math.max(2, clampedW)
-            }
-        })
+    const onLayoutChange = useCallback((currentLayout: Layout) => {
+        const layoutArray = Array.isArray(currentLayout) ? currentLayout : [currentLayout]
+        const validatedLayout: StreamLayout[] = layoutArray.map((item) => ({
+            i: String(item.i),
+            x: Number(item.x),
+            y: Number(item.y),
+            w: Number(item.w),
+            h: Number(item.h),
+            minW: item.minW,
+            minH: item.minH
+        })).map(clampLayoutItem)
+        
         updateLayout(validatedLayout)
-    }, [layoutMode, updateLayout])
+    }, [updateLayout])
 
     if (!mounted) return <div ref={containerRef} className="w-full h-full bg-transparent" />
 

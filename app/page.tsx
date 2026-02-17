@@ -93,7 +93,8 @@ function HomeContent() {
       toast.success(`${validResults.length} stream(s) cargado(s)`)
 
     } catch (error) {
-      console.error('[SceneIt] Error loading streamers:', error)
+      const errorMessage = error instanceof Error ? error.message : 'Unknown error'
+      console.error('[SceneIt] Error loading streamers:', errorMessage)
       toast.error("Error al cargar los streams")
     } finally {
       setIsLoadingStreamers(false)
@@ -138,8 +139,9 @@ function HomeContent() {
           setItems(importedItems)
           toast.success("Layout cargado correctamente")
         }
-      } catch {
-        console.error("Failed to decompress")
+      } catch (error) {
+        const errorMessage = error instanceof Error ? error.message : 'Unknown error'
+        console.error('[SceneIt] Failed to decompress layout:', errorMessage)
       }
       setIsLoaded(true)
     } else if (!layoutParam && !isLoaded) {

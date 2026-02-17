@@ -51,7 +51,9 @@ export async function validateKickChannel(username: string): Promise<ValidationR
       viewerCount: channel.livestream?.viewer_count || 0,
       category: channel.livestream?.categories?.[0]?.name || null
     }
-  } catch {
+  } catch (error) {
+    const errorMessage = error instanceof Error ? error.message : 'Unknown error'
+    console.error('[validateKickChannel] Validation error:', errorMessage)
     return {
       platform: 'kick',
       username,

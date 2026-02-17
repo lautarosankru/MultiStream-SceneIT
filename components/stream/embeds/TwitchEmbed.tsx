@@ -1,9 +1,9 @@
 "use client"
 
-import { useMemo } from "react"
+import { useMemo, memo } from "react"
 import type { StreamItem } from "@/types/scene"
 
-export function TwitchEmbed({ item }: { item: StreamItem }) {
+function TwitchEmbedComponent({ item }: { item: StreamItem }) {
     const parent = useMemo(() => {
         if (typeof window !== "undefined") return window.location.hostname
         return ""
@@ -23,3 +23,5 @@ export function TwitchEmbed({ item }: { item: StreamItem }) {
         />
     )
 }
+
+export const TwitchEmbed = memo(TwitchEmbedComponent)

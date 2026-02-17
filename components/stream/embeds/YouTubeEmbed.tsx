@@ -1,9 +1,9 @@
 "use client"
 
-import { useMemo } from "react"
+import { useMemo, memo } from "react"
 import type { StreamItem } from "@/types/scene"
 
-export function YouTubeEmbed({ item }: { item: StreamItem }) {
+function YouTubeEmbedComponent({ item }: { item: StreamItem }) {
     const muteParam = item.isMuted ? "1" : "0"
 
     const origin = useMemo(() => {
@@ -23,3 +23,5 @@ export function YouTubeEmbed({ item }: { item: StreamItem }) {
         />
     )
 }
+
+export const YouTubeEmbed = memo(YouTubeEmbedComponent)

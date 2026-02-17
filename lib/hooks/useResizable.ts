@@ -55,7 +55,7 @@ export function useResizable({
             setWidth(initialWidth)
             currentWidthRef.current = initialWidth
         }
-    }, [initialWidth])
+    }, [initialWidth, width, isDragging])
 
     const handleMouseDown = useCallback((e: React.MouseEvent) => {
         e.preventDefault()

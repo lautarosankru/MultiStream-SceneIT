@@ -1,9 +1,9 @@
 "use client"
 
-import { useMemo } from "react"
+import { useMemo, memo } from "react"
 import type { StreamItem } from "@/types/scene"
 
-export function KickEmbed({ item }: { item: StreamItem }) {
+function KickEmbedComponent({ item }: { item: StreamItem }) {
     const parent = useMemo(() => {
         if (typeof window !== "undefined") return window.location.hostname
         return ""
@@ -23,3 +23,5 @@ export function KickEmbed({ item }: { item: StreamItem }) {
         />
     )
 }
+
+export const KickEmbed = memo(KickEmbedComponent)

@@ -3,33 +3,7 @@ import { persist } from 'zustand/middleware'
 import { generateId, parseStreamUrl } from '@/lib/utils'
 import { StreamItem, StreamLayout, ItemType, LayoutMode } from '@/types/scene'
 import { GRID_CONFIG, DEFAULT_SIDEBAR_WIDTH, MAIN_STREAM_HEIGHT_RATIO } from '@/lib/config/grid'
-
-// Función helper universal para clonar y validar layout
-function clampLayoutItems(items: StreamItem[]): StreamItem[] {
-    return items.map(item => {
-        const { x, y, w, h } = item.layout
-        
-        // Clamp Y position
-        const clampedY = Math.max(0, Math.min(y, GRID_CONFIG.TOTAL_ROWS - h))
-        // Clamp height to stay within bounds
-        const clampedH = Math.min(h, GRID_CONFIG.TOTAL_ROWS - clampedY)
-        // Clamp X position  
-        const clampedX = Math.max(0, Math.min(x, GRID_CONFIG.COLS - w))
-        // Clamp width
-        const clampedW = Math.min(w, GRID_CONFIG.COLS - clampedX)
-
-        return {
-            ...item,
-            layout: {
-                ...item.layout,
-                x: clampedX,
-                y: clampedY,
-                w: Math.max(GRID_CONFIG.MIN_W, clampedW),
-                h: Math.max(GRID_CONFIG.MIN_H, clampedH)
-            }
-        }
-    })
-}
+import { clampLayoutItems } from '@/lib/layout-utils'
 
 interface SceneState {
     items: StreamItem[];

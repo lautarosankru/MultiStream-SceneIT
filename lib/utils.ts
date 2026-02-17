@@ -17,6 +17,10 @@ export { type StreamPlatform }
 
 export function parseStreamUrl(url: string): { platform: StreamPlatform; sourceId: string } {
   try {
+    if (!url || typeof url !== 'string' || !url.trim()) {
+      return { platform: 'custom', sourceId: url }
+    }
+    
     const urlObj = new URL(url.startsWith('http') ? url : `https://${url}`)
     const hostname = urlObj.hostname.toLowerCase()
     const pathname = urlObj.pathname
@@ -73,7 +77,9 @@ export function parseStreamUrl(url: string): { platform: StreamPlatform; sourceI
 
     return { platform: 'custom', sourceId: url }
 
-  } catch {
+  } catch (error) {
+    const errorMessage = error instanceof Error ? error.message : 'Unknown error'
+    console.error('[parseStreamUrl] Error parsing URL:', errorMessage)
     return { platform: 'custom', sourceId: url }
   }
 }

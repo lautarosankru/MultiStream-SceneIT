@@ -1,11 +1,14 @@
 import { useEffect, useState, useRef, useCallback } from 'react';
 import { KickChatMessage } from '@/types/kick';
+import { MAX_CHAT_MESSAGES, CHAT_RECONNECT_DELAY_MS, MAX_CHAT_RECONNECT_ATTEMPTS } from '@/lib/config/constants';
 
 export function useKickChat(channelSlug: string) {
     const [messages, setMessages] = useState<KickChatMessage[]>([]);
     const [status, setStatus] = useState<'connecting' | 'connected' | 'error'>('connecting');
     const eventSourceRef = useRef<EventSource | null>(null);
     const abortControllerRef = useRef<AbortController | null>(null);
+    const reconnectAttemptsRef = useRef(0);
+    const reconnectTimeoutRef = useRef<NodeJS.Timeout | null>(null);
 
     const connect = useCallback(async () => {
         setStatus('connecting');
@@ -61,21 +64,32 @@ export function useKickChat(channelSlug: string) {
 
                     setMessages(prev => {
                         if (prev.some(m => m.id === newMessage.id)) return prev;
-                        return [...prev.slice(-199), newMessage];
+                        return [...prev.slice(-(MAX_CHAT_MESSAGES - 1)), newMessage];
                     });
-                } catch (e) {
-                    console.error("Error parsing SSE message", e);
+                } catch (error) {
+                    console.error('[useKickChat] Error parsing SSE message:', error instanceof Error ? error.message : 'Unknown error');
                 }
             };
 
-            evtSource.onerror = (err) => {
-                console.error("SSE Error:", err);
+            evtSource.onerror = () => {
+                console.error('[useKickChat] SSE connection error');
                 setStatus('error');
+                
+                // Attempt reconnection with exponential backoff
+                if (reconnectAttemptsRef.current < MAX_CHAT_RECONNECT_ATTEMPTS) {
+                    reconnectAttemptsRef.current++;
+                    const delay = CHAT_RECONNECT_DELAY_MS * Math.pow(2, reconnectAttemptsRef.current - 1);
+                    
+                    reconnectTimeoutRef.current = setTimeout(() => {
+                        console.log(`[useKickChat] Reconnecting... (attempt ${reconnectAttemptsRef.current})`);
+                        connect();
+                    }, delay);
+                }
             };
 
-        } catch (err) {
-            if (err instanceof Error && err.name !== 'AbortError') {
-                console.error("Kick Chat Setup Error:", err);
+        } catch (error) {
+            if (error instanceof Error && error.name !== 'AbortError') {
+                console.error('[useKickChat] Setup error:', error.message);
                 setStatus('error');
             }
         }
@@ -84,25 +98,30 @@ export function useKickChat(channelSlug: string) {
     useEffect(() => {
         // Cleanup function
         const cleanup = () => {
+            if (reconnectTimeoutRef.current) {
+                clearTimeout(reconnectTimeoutRef.current);
+                reconnectTimeoutRef.current = null;
+            }
             if (eventSourceRef.current) {
-                eventSourceRef.current.close()
-                eventSourceRef.current = null
+                eventSourceRef.current.close();
+                eventSourceRef.current = null;
             }
             if (abortControllerRef.current) {
-                abortControllerRef.current.abort()
-                abortControllerRef.current = null
+                abortControllerRef.current.abort();
+                abortControllerRef.current = null;
             }
-            setMessages([])
-            setStatus('connecting')
+            reconnectAttemptsRef.current = 0;
+            setMessages([]);
+            setStatus('connecting');
         }
 
         if (channelSlug) {
-            cleanup()
-            connect()
+            cleanup();
+            connect();
         }
 
-        return cleanup
-    }, [channelSlug]);
+        return cleanup;
+    }, [channelSlug, connect]);
 
     return { messages, status };
 }

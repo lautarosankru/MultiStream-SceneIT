@@ -1,6 +1,6 @@
 "use client"
 
-import { useMemo } from "react"
+import { useMemo, memo } from "react"
 import { type StreamItem } from "@/types/scene"
 import { useTheme } from "next-themes"
 
@@ -8,7 +8,7 @@ interface ChatEmbedProps {
     item: StreamItem
 }
 
-export function ChatEmbed({ item }: ChatEmbedProps) {
+function ChatEmbedComponent({ item }: ChatEmbedProps) {
     const { resolvedTheme } = useTheme()
 
     const parent = useMemo(() => {
@@ -61,3 +61,5 @@ export function ChatEmbed({ item }: ChatEmbedProps) {
             )
     }
 }
+
+export const ChatEmbed = memo(ChatEmbedComponent)

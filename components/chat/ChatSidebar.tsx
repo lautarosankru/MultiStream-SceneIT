@@ -161,11 +161,23 @@ export function ChatSidebar() {
         if (!activeChatId && items.length > 0) {
             setActiveChat(items[0].id)
         }
-    }, [items, activeChatId, setActiveChat])
+    }, [items.length, activeChatId, setActiveChat])
+
+    const activeItem = useMemo(
+        () => items.find(i => i.id === activeChatId),
+        [items, activeChatId]
+    )
+
+    const chatItems = useMemo(
+        () => items.map(item => ({
+            id: item.id,
+            sourceId: item.sourceId,
+            platform: item.platform
+        })),
+        [items]
+    )
 
     if (!isSidebarOpen) return <div className="hidden" />
-
-    const activeItem = items.find(i => i.id === activeChatId)
 
     return (
         <motion.div
@@ -184,11 +196,7 @@ export function ChatSidebar() {
             {/* Glossy Header */}
             <div className="h-14 flex items-center px-3 gap-3 bg-white/60 to-white/30 dark:bg-black/90 border-b border-white/50 dark:border-white/10 backdrop-blur-md shadow-sm">
                 <ChatSelector
-                    items={items.map(item => ({
-                        id: item.id,
-                        sourceId: item.sourceId,
-                        platform: item.platform
-                    }))}
+                    items={chatItems}
                     activeChatId={activeChatId}
                     onSelect={setActiveChat}
                     onReload={handleReload}

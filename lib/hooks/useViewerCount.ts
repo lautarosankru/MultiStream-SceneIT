@@ -1,11 +1,10 @@
 import { useState, useEffect, useCallback, useRef } from 'react'
 import { useSceneStore } from '@/store/useSceneStore'
+import { VIEWER_COUNT_POLL_INTERVAL_MS } from '@/lib/config/constants'
 
 interface ViewerData {
   [username: string]: number
 }
-
-const POLL_INTERVAL_MS = 60_000 // 60 seconds
 
 /**
  * Hook that polls the batch streamer API to get real-time viewer counts.
@@ -45,11 +44,16 @@ export function useViewerCount() {
         }),
       })
 
-      if (!response.ok) return
+      if (!response.ok) {
+        console.error('[useViewerCount] API request failed:', response.status, response.statusText)
+        return
+      }
 
-      const { results } = await response.json()
+      const data = await response.json()
+      const { results } = data
       
       if (!Array.isArray(results)) {
+        console.error('[useViewerCount] Invalid response format: results is not an array')
         return
       }
       
@@ -71,11 +75,13 @@ export function useViewerCount() {
 
       setViewerData(newData)
     } catch (error) {
-      console.error('[useViewerCount] Error fetching viewer counts:', error)
+      const errorMessage = error instanceof Error ? error.message : 'Unknown error'
+      console.error('[useViewerCount] Error fetching viewer counts:', errorMessage)
+      setViewerData({})
     } finally {
       setIsLoading(false)
     }
-  }, []) // Empty deps - uses itemsRef instead
+  }, [])
 
   // Fetch on mount and when items change, then poll
   useEffect(() => {
@@ -86,7 +92,7 @@ export function useViewerCount() {
       clearInterval(intervalRef.current)
     }
 
-    intervalRef.current = setInterval(fetchViewerCounts, POLL_INTERVAL_MS)
+    intervalRef.current = setInterval(fetchViewerCounts, VIEWER_COUNT_POLL_INTERVAL_MS)
 
     return () => {
       if (intervalRef.current) {

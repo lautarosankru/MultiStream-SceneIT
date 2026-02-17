@@ -1,6 +1,7 @@
 import { NextResponse } from 'next/server'
 import { validateKickChannel } from '@/lib/streamers'
 import { ValidationResult, StreamPlatform } from '@/types/scene'
+import { MAX_STREAMERS_PER_BATCH } from '@/lib/config/constants'
 
 interface StreamerInput {
   platform: string
@@ -19,8 +20,8 @@ export async function POST(request: Request) {
       return NextResponse.json({ error: 'Invalid or empty streamers array' }, { status: 400 })
     }
 
-    if (streamers.length > 50) {
-      return NextResponse.json({ error: 'Too many streamers (max 50)' }, { status: 400 })
+    if (streamers.length > MAX_STREAMERS_PER_BATCH) {
+      return NextResponse.json({ error: `Too many streamers (max ${MAX_STREAMERS_PER_BATCH})` }, { status: 400 })
     }
 
     // Validate each streamer has required fields
@@ -64,6 +65,8 @@ export async function POST(request: Request) {
             error: 'Platform not supported'
           }
         } catch (error) {
+          const errorMessage = error instanceof Error ? error.message : 'Unknown error'
+          console.error(`[batch] Validation error for ${username}:`, errorMessage)
           return {
             platform: normalizedPlatform,
             username,
@@ -76,7 +79,8 @@ export async function POST(request: Request) {
 
     return NextResponse.json({ results })
   } catch (error) {
-    console.error('Batch validation error:', error)
+    const errorMessage = error instanceof Error ? error.message : 'Unknown error'
+    console.error('[batch] Batch validation error:', errorMessage)
     return NextResponse.json({ error: 'Internal Server Error' }, { status: 500 })
   }
 }

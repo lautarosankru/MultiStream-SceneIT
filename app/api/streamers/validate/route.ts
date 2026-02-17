@@ -32,7 +32,8 @@ export async function GET(request: Request) {
     }, { status: 200 })
 
   } catch (error) {
-    console.error('Streamer validation error:', error)
+    const errorMessage = error instanceof Error ? error.message : 'Unknown error'
+    console.error('[validate] Streamer validation error:', errorMessage)
     return NextResponse.json({ error: 'Internal Server Error' }, { status: 500 })
   }
 }
