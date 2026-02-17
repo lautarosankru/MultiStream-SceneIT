@@ -28,7 +28,7 @@ export async function POST(request: Request) {
           if (normalizedPlatform === 'kick') {
             const res = await fetch(`https://kick.com/api/v2/channels/${username}`, {
               next: { revalidate: 300 }
-            })
+            } as any)
 
             if (!res.ok) {
               return {
@@ -40,7 +40,7 @@ export async function POST(request: Request) {
             }
 
             const channel = await res.json()
-            
+
             if (!channel.id) {
               return {
                 platform: 'kick',
@@ -63,14 +63,16 @@ export async function POST(request: Request) {
           }
 
           // For Twitch and YouTube, assume valid (the embed will handle validation)
+          // TODO: Implement real validation. Requires TWITCH_CLIENT_ID and YOUTUBE_API_KEY.
           if (normalizedPlatform === 'twitch' || normalizedPlatform === 'youtube') {
             return {
               platform: normalizedPlatform,
               username,
               valid: true,
-              isLive: null,
+              isLive: null, // Unknown without API
               avatar: null,
-              displayName: username
+              displayName: username,
+              error: null
             }
           }
 

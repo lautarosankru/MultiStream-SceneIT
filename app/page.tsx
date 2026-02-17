@@ -48,15 +48,13 @@ function HomeContent() {
       if (usernamesParam) return
 
       // Parse path segments (skip empty and leading slash)
-      const pathSegments = pathname.split('/').filter(s => s && s.length > 0)
+      const pathSegments = pathname.split('/').filter((s: string) => s && s.length > 0)
 
       if (pathSegments.length > 0 && !layoutParam && !isLoaded) {
-        console.log('[SceneIt] Loading from friendly URL:', pathSegments)
         setIsLoadingStreamers(true)
 
         try {
           const parsedStreamers = parseSlugs(pathSegments)
-          console.log('[SceneIt] Parsed streamers:', parsedStreamers)
 
           if (parsedStreamers.length === 0) {
             setIsLoadingStreamers(false)
@@ -81,7 +79,6 @@ function HomeContent() {
           const { results } = await response.json()
           const validResults = results.filter((r: ValidationResult) => r.valid)
 
-          console.log('[SceneIt] Validation results:', results)
 
           if (validResults.length === 0) {
             toast.error("Ningún streamer encontrado")
@@ -163,17 +160,15 @@ function HomeContent() {
     const loadFromStreamersParam = async () => {
       if (!usernamesParam || isLoaded) return
 
-      console.log('[SceneIt] Loading from streamers param:', usernamesParam)
       setIsLoadingStreamers(true)
 
       try {
-        const usernames = usernamesParam.split(',').filter(s => s.length > 0)
+        const usernames = usernamesParam.split(',').filter((s: string) => s.length > 0)
 
         // Get platforms from &p= param
         const platformParam = searchParams.get("p")
-        const platforms = platformParam ? platformParam.split(',').filter(s => s.length > 0) : []
+        const platforms = platformParam ? platformParam.split(',').filter((s: string) => s.length > 0) : []
 
-        console.log('[SceneIt] Parsed params:', { usernames, platforms })
 
         if (usernames.length === 0) {
           setIsLoadingStreamers(false)
@@ -183,12 +178,11 @@ function HomeContent() {
         setValidationProgress(`Validando ${usernames.length} streamer(s)...`)
 
         // Build streamers array with explicit platforms
-        const streamersToValidate = usernames.map((username, index) => ({
+        const streamersToValidate = usernames.map((username: string, index: number) => ({
           platform: platforms[index] || 'kick', // Default to kick if no platform specified
           username
         }))
 
-        console.log('[SceneIt] Streamers to validate:', streamersToValidate)
 
         const response = await fetch('/api/streamers/batch', {
           method: 'POST',
@@ -203,7 +197,6 @@ function HomeContent() {
         const { results } = await response.json()
         const validResults = results.filter((r: ValidationResult) => r.valid)
 
-        console.log('[SceneIt] Validation results:', results)
 
         if (validResults.length === 0) {
           toast.error("Ningún streamer encontrado")

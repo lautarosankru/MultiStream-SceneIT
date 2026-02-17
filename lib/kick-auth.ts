@@ -35,47 +35,45 @@ function base64URLEncode(str: Buffer): string {
         .replace(/=+$/, '');
 }
 
-// --- Server-Side Only Helpers ---
+import { unstable_cache, revalidateTag } from 'next/cache';
 
-let appAccessToken: string | null = null;
-let tokenExpiry: number | null = null;
+// Cache the token request for 23 hours (tokens usually last 24h)
+// This works in serverless by using Next.js Data Cache
+export const getAppAccessToken = unstable_cache(
+    async (): Promise<string> => {
+        try {
+            console.log('[Kick Auth] Fetching new App Access Token...');
+            const res = await fetch(KICK_TOKEN_URL, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/x-www-form-urlencoded',
+                },
+                body: new URLSearchParams({
+                    grant_type: 'client_credentials',
+                    client_id: KICK_CLIENT_ID,
+                    client_secret: KICK_CLIENT_SECRET,
+                }),
+                cache: 'no-store' // Ensure we always fetch fresh if cache expired
+            });
 
-export async function getAppAccessToken(): Promise<string> {
-    // Return cached token if valid
-    if (appAccessToken && tokenExpiry && Date.now() < tokenExpiry) {
-        return appAccessToken;
-    }
+            if (!res.ok) {
+                const errorText = await res.text();
+                throw new Error(`Failed to get Kick app token: ${res.status} ${errorText}`);
+            }
 
-    try {
-        const res = await fetch(KICK_TOKEN_URL, {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/x-www-form-urlencoded',
-            },
-            body: new URLSearchParams({
-                grant_type: 'client_credentials',
-                client_id: KICK_CLIENT_ID,
-                client_secret: KICK_CLIENT_SECRET,
-
-            }),
-        });
-
-        if (!res.ok) {
-            const errorText = await res.text();
-            throw new Error(`Failed to get Kick app token: ${res.status} ${errorText}`);
+            const data = await res.json();
+            return data.access_token;
+        } catch (error) {
+            console.error('Error fetching Kick app token:', error);
+            throw error;
         }
-
-        const data = await res.json();
-        appAccessToken = data.access_token;
-        // Expires in is usually in seconds. Subtract a buffer (e.g. 60s) just in case.
-        tokenExpiry = Date.now() + (data.expires_in * 1000) - 60000;
-
-        return appAccessToken!;
-    } catch (error) {
-        console.error('Error fetching Kick app token:', error);
-        throw error;
+    },
+    ['kick-app-token'],
+    {
+        revalidate: 60 * 60 * 23, // 23 hours
+        tags: ['kick-auth']
     }
-}
+);
 
 export async function fetchKickAPI(endpoint: string, options: RequestInit = {}) {
     const token = await getAppAccessToken();
@@ -92,10 +90,12 @@ export async function fetchKickAPI(endpoint: string, options: RequestInit = {}) 
     });
 
     if (res.status === 401) {
-        // Token might have expired unexpectedly, retry once could be implemented here
-        // For now, just invalidate cache so next request tries to get a new one
-        appAccessToken = null;
-        tokenExpiry = null;
+        console.warn('[Kick API] Token expired (401). Revalidating cache...');
+        // Invalidate the cache tag to force a fresh token on next call
+        // We can't easily retry *this* request without recursion or complexity,
+        // but ensuring the next one works is a good start. 
+        // In a real app, you might want a retry logic here.
+        revalidateTag('kick-auth', 'default');
     }
 
     return res;
