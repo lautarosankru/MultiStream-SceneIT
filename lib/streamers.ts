@@ -64,6 +64,77 @@ export async function validateKickChannel(username: string): Promise<ValidationR
 }
 
 /**
+ * Validate a YouTube channel/video and return its information
+ * Scrapes the channel page to get the Channel ID (UC...) or Video ID
+ */
+export async function validateYouTubeChannel(input: string): Promise<ValidationResult> {
+  // If it's a Video ID (11 chars, alphanumeric + _ -)
+  if (/^[a-zA-Z0-9_-]{11}$/.test(input)) {
+      return {
+          platform: 'youtube',
+          username: input, // Returns Video ID as sourceId
+          valid: true,
+          displayName: input,
+          isLive: false // We assume video unless proven otherwise
+      }
+  }
+
+  // If it's a handle (starts with @) or just a username
+  const handle = input.startsWith('@') ? input : `@${input}`
+  
+  try {
+      // Scrape the channel page searching for externalId
+      const res = await fetch(`https://www.youtube.com/${handle}`, {
+          headers: {
+              'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36'
+          },
+          next: { revalidate: 3600 } // Cache for 1 hour
+      })
+
+      if (!res.ok) {
+           return {
+              platform: 'youtube',
+              username: input,
+              valid: false,
+              error: 'Channel not found'
+          }
+      }
+
+      const html = await res.text()
+      
+      // Look for externalId":"UC..."
+      const match = html.match(/externalId":"(UC[^"]+)"/)
+      
+      if (match && match[1]) {
+          const channelId = match[1]
+           return {
+              platform: 'youtube',
+              username: channelId, // Returns Channel ID as sourceId
+              valid: true,
+              displayName: input,
+              isLive: true // We assume it's a channel for live streaming
+          }
+      }
+
+       return {
+          platform: 'youtube',
+          username: input,
+          valid: false,
+          error: 'Channel ID not found'
+      }
+
+  } catch (error) {
+      console.error('[validateYouTubeChannel] Validation error:', error)
+      return {
+          platform: 'youtube',
+          username: input,
+          valid: false,
+          error: 'Validation failed'
+      }
+  }
+}
+
+/**
  * Parse URL slugs into streamer array
  * @param slugs - Array of URL slugs (from [...slugs] route)
  * @returns Array of parsed streamers with platform and username

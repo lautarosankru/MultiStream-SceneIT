@@ -1,5 +1,5 @@
 import { NextResponse } from 'next/server'
-import { validateKickChannel } from '@/lib/streamers'
+import { validateKickChannel, validateYouTubeChannel } from '@/lib/streamers'
 import { ValidationResult, StreamPlatform } from '@/types/scene'
 import { MAX_STREAMERS_PER_BATCH } from '@/lib/config/constants'
 
@@ -47,7 +47,13 @@ export async function POST(request: Request) {
 
           // For Twitch and YouTube, assume valid (the embed will handle validation)
           // TODO: Implement real validation. Requires TWITCH_CLIENT_ID and YOUTUBE_API_KEY.
-          if (normalizedPlatform === 'twitch' || normalizedPlatform === 'youtube') {
+          if (normalizedPlatform === 'youtube') {
+            return await validateYouTubeChannel(username)
+          }
+
+          // For Twitch, assume valid (the embed will handle validation)
+          // TODO: Implement real validation. Requires TWITCH_CLIENT_ID.
+          if (normalizedPlatform === 'twitch') {
             return {
               platform: normalizedPlatform,
               username,
