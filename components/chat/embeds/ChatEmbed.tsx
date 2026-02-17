@@ -33,7 +33,7 @@ export function ChatEmbed({ item }: ChatEmbedProps) {
             )
 
         case 'kick':
-            const kickSrc = `https://kick.com/chat/${item.sourceId}`
+            const kickSrc = `https://chat.kick.cx/embed/${item.sourceId}`
             return (
                 <iframe
                     src={kickSrc}
