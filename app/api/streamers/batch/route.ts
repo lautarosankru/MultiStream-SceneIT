@@ -1,5 +1,6 @@
 import { NextResponse } from 'next/server'
-import { validateKickChannel, ValidationResult } from '@/lib/streamers'
+import { validateKickChannel } from '@/lib/streamers'
+import { ValidationResult, StreamPlatform } from '@/types/scene'
 
 interface StreamerInput {
   platform: string
@@ -22,7 +23,7 @@ export async function POST(request: Request) {
     const results = await Promise.all(
       streamers.map(async (streamer): Promise<ValidationResult> => {
         const { platform, username } = streamer
-        const normalizedPlatform = platform?.toLowerCase() || 'kick'
+        const normalizedPlatform = (platform?.toLowerCase() || 'kick') as StreamPlatform
 
         try {
           if (normalizedPlatform === 'kick') {

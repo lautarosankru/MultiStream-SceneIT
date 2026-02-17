@@ -17,18 +17,8 @@ import { cn } from "@/lib/utils"
 import { EmptyState } from "@/components/grid/EmptyState"
 import { LiquidBackground } from "@/components/ui/LiquidBackground"
 import { TotalViewers } from "@/components/ui/TotalViewers"
-import { StreamItem } from "@/types/scene"
+import { StreamItem, ValidationResult } from "@/types/scene"
 import { LayoutModeToggle } from "@/components/grid/LayoutModeToggle"
-
-interface ValidationResult {
-  platform: string
-  username: string
-  valid: boolean
-  isLive?: boolean
-  avatar?: string | null
-  displayName?: string
-  error?: string
-}
 
 function HomeContent() {
   const searchParams = useSearchParams()
@@ -117,9 +107,7 @@ function HomeContent() {
             }
           })
 
-          // Clear existing items before loading new ones
-          setItems([])
-
+          // Clear existing items and set new ones
           setItems(streamItems)
           toast.success(`${validResults.length} stream(s) cargado(s)`)
 
@@ -233,7 +221,7 @@ function HomeContent() {
           }
         })
 
-        setItems([])
+        // Set new items (replaces existing items)
         setItems(streamItems)
         toast.success(`${validResults.length} stream(s) cargado(s)`)
 

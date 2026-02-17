@@ -4,21 +4,11 @@
 // - /kick/coscu/twitch/coker (explicit platforms)
 // - /coscu (single streamer)
 
-export interface ParsedStreamer {
-  platform: string
-  username: string
-}
+import type { StreamPlatform, ValidationResult } from '@/types/scene'
 
-export interface ValidationResult {
-  platform: string
+export interface ParsedStreamer {
+  platform: StreamPlatform
   username: string
-  valid: boolean
-  isLive?: boolean
-  avatar?: string | null
-  displayName?: string
-  viewerCount?: number
-  category?: string | null
-  error?: string
 }
 
 /**
@@ -102,11 +92,11 @@ export function parseSlugs(slugs: string[]): ParsedStreamer[] {
     for (let i = 0; i < slugs.length; i++) {
       const potentialPlatform = slugs[i]?.toLowerCase();
 
-      if (knownPlatforms.includes(potentialPlatform)) {
+        if (knownPlatforms.includes(potentialPlatform)) {
         // It is a platform, next should be username
         const username = slugs[i + 1];
         if (username && !knownPlatforms.includes(username.toLowerCase())) {
-          streamers.push({ platform: potentialPlatform, username });
+          streamers.push({ platform: potentialPlatform as StreamPlatform, username });
           i++; // Skip username in next iteration
         } else {
           // Next is missing or is another platform? 

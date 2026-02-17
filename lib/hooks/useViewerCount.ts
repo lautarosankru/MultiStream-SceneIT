@@ -16,10 +16,14 @@ export function useViewerCount() {
   const [viewerData, setViewerData] = useState<ViewerData>({})
   const [isLoading, setIsLoading] = useState(false)
   const intervalRef = useRef<ReturnType<typeof setInterval> | null>(null)
+  const itemsRef = useRef(items)
+  
+  // Keep ref updated with latest items
+  itemsRef.current = items
 
   const fetchViewerCounts = useCallback(async () => {
     // Only fetch for Kick streams (only platform with viewer count support)
-    const kickStreams = items.filter(
+    const kickStreams = itemsRef.current.filter(
       (item) => item.platform === 'kick' && item.type === 'video'
     )
 
@@ -58,7 +62,7 @@ export function useViewerCount() {
     } finally {
       setIsLoading(false)
     }
-  }, [items])
+  }, []) // Empty deps - uses itemsRef instead
 
   // Fetch on mount and when items change, then poll
   useEffect(() => {

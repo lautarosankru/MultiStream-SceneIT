@@ -2,14 +2,7 @@ import { create } from 'zustand'
 import { persist } from 'zustand/middleware'
 import { generateId, parseStreamUrl } from '@/lib/utils'
 import { StreamItem, StreamLayout, ItemType, LayoutMode } from '@/types/scene'
-
-// Constantes universales del grid
-const GRID_CONFIG = {
-    COLS: 12,
-    TOTAL_ROWS: 24,
-    MIN_W: 2,
-    MIN_H: 2
-} as const
+import { GRID_CONFIG, DEFAULT_SIDEBAR_WIDTH, MAIN_STREAM_HEIGHT_RATIO } from '@/lib/config/grid'
 
 // Función helper universal para clonar y validar layout
 function clampLayoutItems(items: StreamItem[]): StreamItem[] {
@@ -84,7 +77,7 @@ export const useSceneStore = create<SceneState>()(
             backgroundId: 'default',
             activeChatId: null,
             isSidebarOpen: true,
-            chatSidebarWidth: 384,
+            chatSidebarWidth: DEFAULT_SIDEBAR_WIDTH,
 
             // Layout Mode State
             layoutMode: 'auto',
@@ -327,7 +320,7 @@ export const useSceneStore = create<SceneState>()(
                 const secondaryCount = items.length - 1
 
                 // Main stream: 65% of height for better visibility
-                const MAIN_H = Math.floor(TOTAL_ROWS * 0.65) // ~15-16 rows
+                const MAIN_H = Math.floor(TOTAL_ROWS * MAIN_STREAM_HEIGHT_RATIO)
 
                 // Secondary height: remaining space
                 const SEC_H = TOTAL_ROWS - MAIN_H

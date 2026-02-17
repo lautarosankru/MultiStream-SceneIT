@@ -23,3 +23,15 @@ export interface StreamItem {
     isMuted: boolean;
     layout: StreamLayout;
 }
+
+export interface ValidationResult {
+    platform: StreamPlatform;
+    username: string;
+    valid: boolean;
+    isLive?: boolean;
+    avatar?: string | null;
+    displayName?: string;
+    viewerCount?: number;
+    category?: string | null;
+    error?: string;
+}

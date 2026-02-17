@@ -3,16 +3,9 @@ import { Responsive, useContainerWidth } from "react-grid-layout"
 import { useSceneStore } from "@/store/useSceneStore"
 import { StreamWrapper } from "@/components/stream/StreamWrapper"
 import { cn } from "@/lib/utils"
+import { GRID_CONFIG } from "@/lib/config/grid"
 import "react-grid-layout/css/styles.css"
 import "react-resizable/css/styles.css"
-
-const GRID_CONFIG = {
-    BASE_ROWS: 24,
-    MARGIN_Y: 10,
-    PADDING_Y: 32,
-    MAX_ROWS: 24,
-    COLS: 12
-} as const
 
 type ResizeHandle = "s" | "w" | "e" | "n" | "sw" | "nw" | "se" | "ne";
 
@@ -101,10 +94,13 @@ export function SceneGrid() {
     }, [items.length, layoutMode])
 
     // Handle layout changes - clamp only the item being resized, not all items
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const onLayoutChange = useCallback((currentLayout: any) => {
         // Only validate items that are being actively dragged/resized
         // We check which item has changed and clamp just that one
-        const validatedLayout = currentLayout.map((item: any) => {
+        const validatedLayout = currentLayout.map((item: {
+            i: string; x: number; y: number; w: number; h: number;
+        }) => {
             // Clamp to grid boundaries
             const maxY = GRID_CONFIG.MAX_ROWS - item.h
             const clampedY = Math.max(0, Math.min(item.y, maxY))
@@ -146,8 +142,7 @@ export function SceneGrid() {
                 draggableHandle=".drag-handle"
                 resizeHandle={(axis: ResizeHandle, ref: React.Ref<HTMLElement>) => (
                     <div
-                        // @ts-expect-error - resizeHandle ref type mismatch
-                        ref={ref}
+                        ref={ref as React.Ref<HTMLDivElement>}
                         className={cn(
                             `react-resizable-handle react-resizable-handle-${axis} z-50`,
                             "absolute bottom-0 right-0 w-12 h-12 flex items-end justify-end cursor-se-resize touch-none",
