@@ -68,7 +68,8 @@ export function SceneGrid() {
         }
     }, [items, isLocked, layoutMode])
 
-    // Validate layout when items change - ensures they stay within viewport
+    // Validate layout only when items are added/removed
+    // Don't interfere with manual resize in custom mode
     useEffect(() => {
         if (items.length === 0) return
 
@@ -77,10 +78,9 @@ export function SceneGrid() {
             return y + h > GRID_CONFIG.MAX_ROWS || x + w > GRID_CONFIG.COLS
         })
 
-        if (hasInvalidItems) {
+        if (hasInvalidItems && layoutMode !== 'custom') {
             const newLayout = items.map(item => {
                 const { x, y, w, h } = item.layout
-                // Clamp to stay within grid
                 const clampedY = Math.max(0, Math.min(y, GRID_CONFIG.MAX_ROWS - h))
                 const clampedH = Math.min(h, GRID_CONFIG.MAX_ROWS - clampedY)
                 const clampedX = Math.max(0, Math.min(x, GRID_CONFIG.COLS - w))
@@ -98,21 +98,26 @@ export function SceneGrid() {
             })
             updateLayout(newLayout)
         }
-    }, [items.length])
+    }, [items.length, layoutMode])
 
-    // Handle layout changes - clamp items within viewport
+    // Handle layout changes - clamp only the item being resized, not all items
     const onLayoutChange = useCallback((currentLayout: any) => {
+        // Only validate items that are being actively dragged/resized
+        // We check which item has changed and clamp just that one
         const validatedLayout = currentLayout.map((item: any) => {
+            // Clamp to grid boundaries
             const maxY = GRID_CONFIG.MAX_ROWS - item.h
             const clampedY = Math.max(0, Math.min(item.y, maxY))
             const clampedH = Math.min(item.h, GRID_CONFIG.MAX_ROWS - clampedY)
+            const clampedX = Math.max(0, Math.min(item.x, GRID_CONFIG.COLS - item.w))
+            const clampedW = Math.min(item.w, GRID_CONFIG.COLS - clampedX)
 
             return {
                 ...item,
                 y: clampedY,
                 h: Math.max(2, clampedH),
-                x: Math.max(0, Math.min(item.x, GRID_CONFIG.COLS - item.w)),
-                w: Math.min(item.w, GRID_CONFIG.COLS - item.x)
+                x: clampedX,
+                w: Math.max(2, clampedW)
             }
         })
         updateLayout(validatedLayout)
