@@ -37,35 +37,48 @@ export function useResizable({
     const [isDragging, setIsDragging] = useState(false)
     const startXRef = useRef(0)
     const startWidthRef = useRef(0)
+    const currentWidthRef = useRef(initialWidth)
+    const onResizeRef = useRef(onResize)
+    const onResizeEndRef = useRef(onResizeEnd)
+    const onResizeStartRef = useRef(onResizeStart)
+
+    // Keep refs updated
+    useEffect(() => {
+        onResizeRef.current = onResize
+        onResizeEndRef.current = onResizeEnd
+        onResizeStartRef.current = onResizeStart
+    }, [onResize, onResizeEnd, onResizeStart])
+
+    // Sync with external width changes (e.g., from store rehydration or viewport resize)
+    useEffect(() => {
+        if (!isDragging && initialWidth !== width) {
+            setWidth(initialWidth)
+            currentWidthRef.current = initialWidth
+        }
+    }, [initialWidth, isDragging])
 
     const handleMouseDown = useCallback((e: React.MouseEvent) => {
         e.preventDefault()
         setIsDragging(true)
         startXRef.current = e.clientX
-        startWidthRef.current = width
+        startWidthRef.current = currentWidthRef.current
 
-        // Prevenir selección de texto durante drag
         document.body.style.userSelect = 'none'
         document.body.style.webkitUserSelect = 'none'
         document.body.style.cursor = 'col-resize'
 
-        onResizeStart?.()
-    }, [width, onResizeStart])
+        onResizeStartRef.current?.()
+    }, [])
 
     useEffect(() => {
         if (!isDragging) return
 
         const handleMouseMove = (e: MouseEvent) => {
             const delta = e.clientX - startXRef.current
-
-            // Calcular nuevo ancho basado en el edge
-            // Si el edge es 'left' (sidebar a la derecha), aumentar width al mover a la izquierda (delta negativo)
-            // Si el edge es 'right' (sidebar a la izquierda), aumentar width al mover a la derecha (delta positivo)
             const newWidth = edge === 'left'
-                ? startWidthRef.current - delta  // Sidebar a la derecha: restar delta
-                : startWidthRef.current + delta  // Sidebar a la izquierda: sumar delta
+                ? startWidthRef.current - delta
+                : startWidthRef.current + delta
 
-            // Calcular max dinámico si es función
             const computedMax = typeof maxWidth === 'function'
                 ? maxWidth(window.innerWidth)
                 : maxWidth
@@ -75,17 +88,17 @@ export function useResizable({
                 Math.max(minWidth, newWidth)
             )
 
+            currentWidthRef.current = clampedWidth
             setWidth(clampedWidth)
-            onResize?.(clampedWidth)
+            onResizeRef.current?.(clampedWidth)
         }
 
         const handleMouseUp = () => {
             setIsDragging(false)
-            // Restaurar estilos del body
             document.body.style.userSelect = ''
             document.body.style.webkitUserSelect = ''
             document.body.style.cursor = ''
-            onResizeEnd?.(width)
+            onResizeEndRef.current?.(currentWidthRef.current)
         }
 
         window.addEventListener('mousemove', handleMouseMove)
@@ -97,12 +110,11 @@ export function useResizable({
             window.removeEventListener('mouseup', handleMouseUp)
             window.removeEventListener('mouseleave', handleMouseUp)
 
-            // Cleanup crucial en caso de unmount durante drag
             document.body.style.userSelect = ''
             document.body.style.webkitUserSelect = ''
             document.body.style.cursor = ''
         }
-    }, [isDragging, edge, minWidth, maxWidth, onResize, onResizeEnd, width])
+    }, [isDragging, edge, minWidth, maxWidth])
 
     return {
         width,

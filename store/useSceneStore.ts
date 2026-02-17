@@ -64,11 +64,33 @@ export const useSceneStore = create<SceneState>()(
                 const { platform, sourceId } = parseStreamUrl(url)
                 const id = generateId()
 
-                // Calculamos posición inicial basada en items existentes
+                const TOTAL_ROWS = 24
+                const DEFAULT_H = 9
+                const DEFAULT_W = 4
+
+                // Calculate position based on existing items
                 const currentItems = get().items
-                const y = currentItems.length > 0
-                    ? Math.max(...currentItems.map(i => i.layout.y + i.layout.h))
-                    : 0
+                let y = 0
+                let x = 0
+
+                if (currentItems.length > 0) {
+                    // Find the lowest point in the grid
+                    const maxY = Math.max(...currentItems.map(i => i.layout.y + i.layout.h))
+                    
+                    // If adding at maxY would exceed viewport, try to find empty space
+                    if (maxY + DEFAULT_H > TOTAL_ROWS) {
+                        // Try to fit in available space or place at top
+                        y = 0
+                        x = 0
+                    } else {
+                        y = maxY
+                        x = 0
+                    }
+                }
+
+                // Ensure the item fits within bounds
+                const finalH = Math.min(DEFAULT_H, TOTAL_ROWS - y)
+                const finalW = Math.min(DEFAULT_W, 12 - x)
 
                 const newItem: StreamItem = {
                     id,
@@ -78,10 +100,10 @@ export const useSceneStore = create<SceneState>()(
                     isMuted: false,
                     layout: {
                         i: id,
-                        x: 0,
-                        y: y + 9 > 24 ? 0 : y, // Si excede el alto, lo ponemos arriba (el grid lo empujará si hay colisión)
-                        w: 4, // ancho default (grid de 12 columnas)
-                        h: 9, // altura default para video 16:9 aprox en grid
+                        x,
+                        y,
+                        w: Math.max(2, finalW),
+                        h: Math.max(2, finalH),
                         minW: 2,
                         minH: 2,
                     }
@@ -89,7 +111,7 @@ export const useSceneStore = create<SceneState>()(
 
                 set((state) => ({
                     items: [...state.items, newItem],
-                    activeChatId: id // Auto-select chat for new item
+                    activeChatId: id
                 }))
             },
 
@@ -152,45 +174,57 @@ export const useSceneStore = create<SceneState>()(
 
                 const COLS = 12
                 const TOTAL_ROWS = 24
-                let w = 12
-                let h = 24
+                const count = items.length
 
-                if (items.length === 1) {
-                    w = 12;
-                    h = TOTAL_ROWS;
-                } else if (items.length === 2) {
-                    w = 6;
-                    h = TOTAL_ROWS;
-                } else if (items.length <= 4) {
-                    w = 6;
-                    h = TOTAL_ROWS / 2;
-                } else if (items.length <= 6) {
-                    w = 4;
-                    h = TOTAL_ROWS / 2;
-                } else if (items.length <= 9) {
-                    w = 4;
-                    h = TOTAL_ROWS / 3;
+                // Calculate optimal grid dimensions
+                // For 16:9 aspect ratio, we want cols/rows ≈ 16/9 = 1.78
+                let cols: number, rows: number
+
+                if (count === 1) {
+                    cols = 1; rows = 1
+                } else if (count === 2) {
+                    cols = 2; rows = 1
+                } else if (count <= 4) {
+                    cols = 2; rows = 2
+                } else if (count <= 6) {
+                    cols = 3; rows = 2
+                } else if (count <= 9) {
+                    cols = 3; rows = 3
+                } else if (count <= 12) {
+                    cols = 4; rows = 3
+                } else if (count <= 16) {
+                    cols = 4; rows = 4
                 } else {
-                    w = 3;
-                    h = TOTAL_ROWS / 3;
+                    // For more items, calculate dynamically
+                    cols = Math.ceil(Math.sqrt(count * 1.5))
+                    rows = Math.ceil(count / cols)
                 }
 
-                const newItems = items.map((item, index) => {
-                    const row = Math.floor(index / (COLS / w))
-                    const col = index % (COLS / w)
+                // Calculate item dimensions
+                const itemWidth = Math.floor(COLS / cols)
+                const itemHeight = Math.floor(TOTAL_ROWS / rows)
 
-                    const finalY = row * h;
-                    // Clamp h if it would exceed TOTAL_ROWS
-                    const finalH = (finalY + h > TOTAL_ROWS) ? (TOTAL_ROWS - finalY) : h;
+                const newItems = items.map((item, index) => {
+                    const row = Math.floor(index / cols)
+                    const col = index % cols
+
+                    const x = col * itemWidth
+                    const y = row * itemHeight
+
+                    // Ensure items don't exceed grid boundaries
+                    const w = Math.min(itemWidth, COLS - x)
+                    const h = Math.min(itemHeight, TOTAL_ROWS - y)
 
                     return {
                         ...item,
                         layout: {
                             ...item.layout,
-                            x: col * w,
-                            y: finalY,
-                            w,
-                            h: Math.max(2, finalH)
+                            x,
+                            y,
+                            w: Math.max(2, w),
+                            h: Math.max(2, h),
+                            minW: 2,
+                            minH: 2
                         }
                     }
                 })
@@ -257,14 +291,16 @@ export const useSceneStore = create<SceneState>()(
 
                 // If only 1 item, full screen
                 if (items.length === 1) {
-                    const newItems = items.map((item, index) => ({
+                    const newItems = items.map((item) => ({
                         ...item,
                         layout: {
                             ...item.layout,
                             x: 0,
                             y: 0,
-                            w: 12,
-                            h: TOTAL_ROWS
+                            w: COLS,
+                            h: TOTAL_ROWS,
+                            minW: 2,
+                            minH: 2
                         }
                     }))
                     set({ items: newItems })
@@ -274,14 +310,25 @@ export const useSceneStore = create<SceneState>()(
                 // Calculate number of secondary items
                 const secondaryCount = items.length - 1
 
-                // Main stream: 60% of height (14 rows)
-                const MAIN_H = Math.round(TOTAL_ROWS * 0.6) // 14
+                // Main stream: 65% of height for better visibility
+                const MAIN_H = Math.floor(TOTAL_ROWS * 0.65) // ~15-16 rows
 
-                // Secondary height: remaining 40% (10 rows)
-                const SEC_H = TOTAL_ROWS - MAIN_H // 10
+                // Secondary height: remaining space
+                const SEC_H = TOTAL_ROWS - MAIN_H
 
-                // Secondary width: divide 12 cols evenly among all secondary items
-                const SEC_W = Math.floor(COLS / secondaryCount)
+                // Calculate secondary layout - fit in one or two rows if needed
+                let secondaryCols = secondaryCount
+                let secondaryRows = 1
+
+                // If too many secondary items for one row, use multiple rows
+                if (secondaryCount > 6) {
+                    secondaryCols = Math.ceil(Math.sqrt(secondaryCount))
+                    secondaryRows = Math.ceil(secondaryCount / secondaryCols)
+                }
+
+                // Secondary width: divide cols evenly
+                const SEC_W = Math.floor(COLS / secondaryCols)
+                const SEC_ROW_H = Math.floor(SEC_H / secondaryRows)
 
                 // Get all secondary items in original order
                 const secondaryItems = items.filter(i => i.id !== actualMainId)
@@ -297,22 +344,33 @@ export const useSceneStore = create<SceneState>()(
                                 x: 0,
                                 y: 0,
                                 w: COLS,
-                                h: MAIN_H
+                                h: MAIN_H,
+                                minW: 2,
+                                minH: 2
                             }
                         }
                     }
 
-                    // Secondary items: all in one row below main, distributed horizontally
-                    const secIndex = secondaryItems.findIndex(i => i.id === item.id)
+                    // Secondary item
+                    const secIndex = secondaryItems.findIndex(s => s.id === item.id)
+                    const secRow = Math.floor(secIndex / secondaryCols)
+                    const secCol = secIndex % secondaryCols
+
+                    const x = secCol * SEC_W
+                    const y = MAIN_H + (secRow * SEC_ROW_H)
+                    const w = Math.min(SEC_W, COLS - x)
+                    const h = Math.min(SEC_ROW_H, TOTAL_ROWS - y)
 
                     return {
                         ...item,
                         layout: {
                             ...item.layout,
-                            x: secIndex * SEC_W,
-                            y: MAIN_H,
-                            w: SEC_W,
-                            h: SEC_H
+                            x,
+                            y,
+                            w: Math.max(2, w),
+                            h: Math.max(2, h),
+                            minW: 2,
+                            minH: 2
                         }
                     }
                 })

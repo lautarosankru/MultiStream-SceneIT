@@ -29,31 +29,13 @@ export function SceneGrid() {
         return () => observer.disconnect();
     }, [containerRef, mounted]);
 
-    // Calculate rowHeight to fit a fixed number of rows (e.g., 20) in the viewport
-    // containerHeight - padding (32px) - margins (19 * 10px) / 20 rows
+    // Fixed grid system: always 24 rows to prevent viewport overflow
     const BASE_ROWS = 24;
     const MARGIN_Y = 10;
     const PADDING_Y = 32; // p-4 = 16px * 2
+    const MAX_ROWS = BASE_ROWS; // Fixed: never allow more than 24 rows
 
-    // Calculate dynamic maxRows based on spotlight layout
-    // In spotlight mode with many secondary items, we may need more than 24 rows
-    const maxRows = useMemo(() => {
-        if (items.length === 0) {
-            return BASE_ROWS;
-        }
-        
-        // Calculate the max Y + H from all items
-        const maxYH = items.reduce((max, item) => {
-            const itemBottom = item.layout.y + item.layout.h;
-            return Math.max(max, itemBottom);
-        }, 0);
-        
-        // Add some buffer and ensure minimum of BASE_ROWS
-        return Math.max(BASE_ROWS, maxYH);
-    }, [items, layoutMode]);
-
-    // rowHeight is calculated to fit BASE_ROWS (24) in the container
-    // This ensures consistent sizing regardless of actual maxRows
+    // Calculate rowHeight to fit exactly BASE_ROWS in the container
     const rowHeight = useMemo(() => {
         if (!containerHeight) return 30;
         const availableHeight = containerHeight - PADDING_Y - ((BASE_ROWS - 1) * MARGIN_Y);
@@ -81,22 +63,27 @@ export function SceneGrid() {
                 static: isLocked // Standard RGL way to lock items
             }))
         }
-    }, [items, isLocked, layoutMode, mainStreamId])
+    }, [items, isLocked, layoutMode])
 
-    // Checking changes to layout store
+    // Validate and update layout - prevent items from going below viewport
     const onLayoutChange = useCallback((currentLayout: any, _allLayouts: any) => {
-        // Only update if not locked
         if (!isLocked) {
-            // Ensure data integrity before saving to store
-            // Use maxRows for validation to allow spotlight layouts with more rows
-            const validatedLayout = currentLayout.map((item: any) => ({
-                ...item,
-                y: Math.min(item.y, maxRows - item.h),
-                h: Math.min(item.h, maxRows - item.y)
-            }));
+            // Strict validation: clamp all items within MAX_ROWS boundary
+            const validatedLayout = currentLayout.map((item: any) => {
+                const maxY = Math.max(0, MAX_ROWS - item.h)
+                const maxH = Math.max(2, MAX_ROWS - item.y)
+                
+                return {
+                    ...item,
+                    y: Math.min(item.y, maxY),
+                    h: Math.min(item.h, maxH),
+                    x: Math.max(0, Math.min(item.x, 12 - item.w)),
+                    w: Math.min(item.w, 12 - item.x)
+                }
+            });
             updateLayout(validatedLayout)
         }
-    }, [isLocked, updateLayout, maxRows])
+    }, [isLocked, updateLayout])
 
     if (!mounted) return <div ref={containerRef} className="w-full h-full bg-transparent" />
 
@@ -107,7 +94,7 @@ export function SceneGrid() {
                 "w-full h-full p-4 transition-colors duration-500",
                 !isLocked ? "bg-white/[0.01]" : null
             )}
-            style={{ overflowY: maxRows > BASE_ROWS ? 'auto' : 'hidden' }}
+            style={{ overflow: 'hidden' }}
         >
             <Responsive
                 className="layout"
@@ -116,7 +103,7 @@ export function SceneGrid() {
                 breakpoints={{ lg: 1200, md: 996, sm: 768, xs: 480, xxs: 0 }}
                 cols={{ lg: 12, md: 10, sm: 6, xs: 4, xxs: 2 }}
                 rowHeight={rowHeight}
-                maxRows={maxRows}
+                maxRows={MAX_ROWS}
                 // @ts-expect-error - draggableHandle is supported but types are missing it in ResponsiveProps
                 draggableHandle=".drag-handle"
                 resizeHandle={(axis: any, ref: React.Ref<HTMLElement>) => (
@@ -161,11 +148,10 @@ export function SceneGrid() {
                     const idealRealH = realW * (9 / 16);
 
                     // Convert pixels back to grid rows (h)
-                    // h = (realH + MARGIN) / (rowHeight + MARGIN)
                     const idealH = Math.round((idealRealH + MARGIN) / (rowHeight + MARGIN));
 
-                    // CLAMP: Don't let it exceed maxRows - current Y
-                    const maxAvailableH = maxRows - newItem.y;
+                    // STRICT CLAMP: Never exceed MAX_ROWS boundary
+                    const maxAvailableH = MAX_ROWS - newItem.y;
                     newItem.h = Math.min(maxAvailableH, Math.max(newItem.minH ?? 2, idealH));
                 }}
                 onLayoutChange={onLayoutChange}
