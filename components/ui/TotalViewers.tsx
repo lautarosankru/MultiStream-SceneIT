@@ -1,5 +1,6 @@
 "use client"
 
+import { useMemo } from "react"
 import { useViewerCount } from "@/lib/hooks/useViewerCount"
 import { useSceneStore } from "@/store/useSceneStore"
 import { Eye } from "lucide-react"
@@ -23,8 +24,12 @@ export function TotalViewers() {
   const items = useSceneStore((s) => s.items)
   const { totalViewers, isLoading } = useViewerCount()
 
-  // Don't render if no video streams
-  const hasVideoStreams = items.some((item) => item.type === 'video')
+  // Don't render if no video streams - memoized to prevent recalculation
+  const hasVideoStreams = useMemo(
+    () => items.some((item) => item.type === 'video'),
+    [items]
+  )
+  
   if (!hasVideoStreams) return null
 
   return (

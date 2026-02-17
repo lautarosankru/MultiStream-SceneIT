@@ -1,6 +1,6 @@
 "use client"
 
-import { useState, useMemo } from "react"
+import { useState, useMemo, useCallback } from "react"
 import { useSceneStore } from "@/store/useSceneStore"
 import { compressLayout } from "@/lib/compression"
 import { generateFriendlyUrl } from "@/lib/streamers"
@@ -34,7 +34,7 @@ export function ShareButton() {
         return generateFriendlyUrl(streamers)
     }, [items])
 
-    const handleShare = () => {
+    const handleShare = useCallback(() => {
         if (typeof window === 'undefined' || items.length === 0) {
             toast.error("Agrega streams antes de compartir")
             return
@@ -59,7 +59,7 @@ export function ShareButton() {
         }
 
         setTimeout(() => setCopied(false), 2000)
-    }
+    }, [items, friendlyUrl])
 
     return (
         <Button

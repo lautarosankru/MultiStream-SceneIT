@@ -156,13 +156,7 @@ export function ChatSidebar() {
         setReloadKey(prev => prev + 1)
     }
 
-    // Auto-select first chat if none selected and items exist
-    useEffect(() => {
-        if (!activeChatId && items.length > 0) {
-            setActiveChat(items[0].id)
-        }
-    }, [items.length, activeChatId, setActiveChat])
-
+    // Memoize derived data
     const activeItem = useMemo(
         () => items.find(i => i.id === activeChatId),
         [items, activeChatId]
@@ -176,6 +170,13 @@ export function ChatSidebar() {
         })),
         [items]
     )
+
+    // Auto-select first chat if none selected and items exist
+    useEffect(() => {
+        if (!activeChatId && items.length > 0) {
+            setActiveChat(items[0].id)
+        }
+    }, [items.length, activeChatId, setActiveChat])
 
     if (!isSidebarOpen) return <div className="hidden" />
 

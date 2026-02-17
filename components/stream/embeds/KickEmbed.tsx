@@ -1,17 +1,15 @@
 "use client"
 
-import { useMemo, memo } from "react"
+import { memo } from "react"
 import type { StreamItem } from "@/types/scene"
+import { useEmbedHost } from "@/lib/hooks/useEmbedHost"
 
 function KickEmbedComponent({ item }: { item: StreamItem }) {
-    const parent = useMemo(() => {
-        if (typeof window !== "undefined") return window.location.hostname
-        return ""
-    }, [])
+    const { hostname } = useEmbedHost()
 
-    if (!parent) return <div className="w-full h-full bg-slate-900 animate-pulse" />
+    if (!hostname) return <div className="w-full h-full bg-slate-900 animate-pulse" />
 
-    const src = `https://player.kick.cx/${item.sourceId}?autoplay=true&muted=${item.isMuted}&parent=${parent}`
+    const src = `https://player.kick.cx/${item.sourceId}?autoplay=true&muted=${item.isMuted}&parent=${hostname}`
 
     return (
         <iframe

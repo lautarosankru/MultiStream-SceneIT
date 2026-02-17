@@ -16,6 +16,7 @@ export function useViewerCount() {
   const [isLoading, setIsLoading] = useState(false)
   const intervalRef = useRef<ReturnType<typeof setInterval> | null>(null)
   const itemsRef = useRef(items)
+  const isMountedRef = useRef(true)
   
   // Keep ref updated with latest items
   itemsRef.current = items
@@ -73,18 +74,25 @@ export function useViewerCount() {
         }
       }
 
-      setViewerData(newData)
+      if (isMountedRef.current) {
+        setViewerData(newData)
+      }
     } catch (error) {
       const errorMessage = error instanceof Error ? error.message : 'Unknown error'
       console.error('[useViewerCount] Error fetching viewer counts:', errorMessage)
-      setViewerData({})
+      if (isMountedRef.current) {
+        setViewerData({})
+      }
     } finally {
-      setIsLoading(false)
+      if (isMountedRef.current) {
+        setIsLoading(false)
+      }
     }
   }, [])
 
   // Fetch on mount and when items change, then poll
   useEffect(() => {
+    isMountedRef.current = true
     fetchViewerCounts()
 
     // Clear previous interval
@@ -95,8 +103,10 @@ export function useViewerCount() {
     intervalRef.current = setInterval(fetchViewerCounts, VIEWER_COUNT_POLL_INTERVAL_MS)
 
     return () => {
+      isMountedRef.current = false
       if (intervalRef.current) {
         clearInterval(intervalRef.current)
+        intervalRef.current = null
       }
     }
   }, [fetchViewerCounts])

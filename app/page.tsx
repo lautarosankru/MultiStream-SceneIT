@@ -19,6 +19,7 @@ import { LiquidBackground } from "@/components/ui/LiquidBackground"
 import { TotalViewers } from "@/components/ui/TotalViewers"
 import { StreamItem, ValidationResult } from "@/types/scene"
 import { LayoutModeToggle } from "@/components/grid/LayoutModeToggle"
+import { ErrorBoundary } from "@/components/ui/ErrorBoundary"
 
 function HomeContent() {
   const searchParams = useSearchParams()
@@ -223,27 +224,29 @@ function HomeContent() {
 
       {/* Main Layout Area */}
       <div className="flex-1 flex overflow-hidden relative">
-        <div className="flex-1 overflow-hidden relative">
-          {/* Loading State for Friendly URLs */}
-          {isLoadingStreamers ? (
-            <div className="h-full flex flex-col items-center justify-center gap-4">
-              <Loader2 className="h-12 w-12 animate-spin text-cyan-500" />
-              <div className="text-center">
-                <p className="text-lg font-semibold text-slate-700 dark:text-slate-300">
-                  Cargando streams
-                </p>
-                {validationProgress && (
-                  <p className="text-sm text-slate-500">{validationProgress}</p>
-                )}
+        <ErrorBoundary>
+          <div className="flex-1 overflow-hidden relative">
+            {/* Loading State for Friendly URLs */}
+            {isLoadingStreamers ? (
+              <div className="h-full flex flex-col items-center justify-center gap-4">
+                <Loader2 className="h-12 w-12 animate-spin text-cyan-500" />
+                <div className="text-center">
+                  <p className="text-lg font-semibold text-slate-700 dark:text-slate-300">
+                    Cargando streams
+                  </p>
+                  {validationProgress && (
+                    <p className="text-sm text-slate-500">{validationProgress}</p>
+                  )}
+                </div>
               </div>
-            </div>
-          ) : items.length === 0 ? (
-            <EmptyState />
-          ) : (
-            <SceneGrid />
-          )}
-        </div>
-        <ChatSidebar />
+            ) : items.length === 0 ? (
+              <EmptyState />
+            ) : (
+              <SceneGrid />
+            )}
+          </div>
+          <ChatSidebar />
+        </ErrorBoundary>
       </div>
     </main>
   )

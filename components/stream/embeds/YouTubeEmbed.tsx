@@ -1,15 +1,12 @@
 "use client"
 
-import { useMemo, memo } from "react"
+import { memo } from "react"
 import type { StreamItem } from "@/types/scene"
+import { useEmbedHost } from "@/lib/hooks/useEmbedHost"
 
 function YouTubeEmbedComponent({ item }: { item: StreamItem }) {
     const muteParam = item.isMuted ? "1" : "0"
-
-    const origin = useMemo(() => {
-        if (typeof window !== "undefined") return window.location.origin
-        return ""
-    }, [])
+    const { origin } = useEmbedHost()
 
     const src = `https://www.youtube-nocookie.com/embed/${item.sourceId}?autoplay=1&mute=${muteParam}&controls=1&vq=hd1080&origin=${origin}`
 

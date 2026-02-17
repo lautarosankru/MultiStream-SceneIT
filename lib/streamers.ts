@@ -74,54 +74,41 @@ export function parseSlugs(slugs: string[]): ParsedStreamer[] {
   }
 
   const streamers: ParsedStreamer[] = []
+  const knownPlatforms: StreamPlatform[] = ['kick', 'twitch', 'youtube']
+  const firstSlug = slugs[0]?.toLowerCase()
 
-  // Check first slug to see if using explicit platform format (platform/username)
-  // Format: /kick/coscu/twitch/coker means: platform=kick, username=coscu, platform=twitch, username=coker
+  // Determine format: explicit (platform/username pairs) or simple (all usernames)
+  const isExplicitFormat = knownPlatforms.includes(firstSlug as StreamPlatform)
 
-  // Normalize checking: Is the first item a known platform?
-  const knownPlatforms = ['kick', 'twitch', 'youtube'];
-  const firstSlug = slugs[0]?.toLowerCase();
+  if (isExplicitFormat) {
+    // Explicit format: /platform/username/platform/username/...
+    for (let i = 0; i < slugs.length; i += 2) {
+      const platform = slugs[i]?.toLowerCase()
+      const username = slugs[i + 1]
 
-  // Heuristic: If strict platform/username pairs are used, we expect even length OR last one missing username?
-  // Let's iterate and consume. If current token is a platform, next is username.
-  // If current token is NOT a platform, assume it's a kick username (unless we are in explicit mode? No, mix mode is weird).
-  // Actually, the original logic had two modes: Explicit vs Simple. Let's keep that but make it robust.
-
-  const hasExplicitPlatform = knownPlatforms.includes(firstSlug);
-
-  if (hasExplicitPlatform) {
-    // Explicit format: [platform, username, platform, username, ...]
-    for (let i = 0; i < slugs.length; i++) {
-      const potentialPlatform = slugs[i]?.toLowerCase();
-
-        if (knownPlatforms.includes(potentialPlatform)) {
-        // It is a platform, next should be username
-        const username = slugs[i + 1];
-        if (username && !knownPlatforms.includes(username.toLowerCase())) {
-          streamers.push({ platform: potentialPlatform as StreamPlatform, username });
-          i++; // Skip username in next iteration
-        } else {
-          // Next is missing or is another platform? 
-          // If next is platform, then this platform has no username? Skip it.
-          // If next is missing, skip.
-          continue;
-        }
-      } else {
-        // Found something that is NOT a platform where a platform was expected?
-        // Maybe it's a username for default platform (Kick)?
-        // Or just noise. In strict explicit mode, we might skip.
-        // Let's be permissive: if it's not a platform, treat as Kick username ??
-        // No, the requirement was robust parsing. Mixing styles is bad.
-        // Let's stick to: if we started with a platform, we expect pairs.
+      // Validate platform and username pair
+      if (
+        platform &&
+        knownPlatforms.includes(platform as StreamPlatform) &&
+        username &&
+        username.trim() &&
+        !knownPlatforms.includes(username.toLowerCase() as StreamPlatform)
+      ) {
+        streamers.push({
+          platform: platform as StreamPlatform,
+          username: username.trim()
+        })
       }
     }
   } else {
-    // Simple format: all slugs are usernames, assume default platform (Kick)
-    const defaultPlatform = 'kick'
-
+    // Simple format: all slugs are usernames, default to Kick
     for (const slug of slugs) {
-      if (slug && slug.trim() && !knownPlatforms.includes(slug.toLowerCase())) {
-        streamers.push({ platform: defaultPlatform, username: slug.toLowerCase().trim() })
+      const trimmed = slug?.trim()
+      if (trimmed && !knownPlatforms.includes(trimmed.toLowerCase() as StreamPlatform)) {
+        streamers.push({
+          platform: 'kick',
+          username: trimmed.toLowerCase()
+        })
       }
     }
   }

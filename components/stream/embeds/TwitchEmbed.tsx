@@ -1,17 +1,15 @@
 "use client"
 
-import { useMemo, memo } from "react"
+import { memo } from "react"
 import type { StreamItem } from "@/types/scene"
+import { useEmbedHost } from "@/lib/hooks/useEmbedHost"
 
 function TwitchEmbedComponent({ item }: { item: StreamItem }) {
-    const parent = useMemo(() => {
-        if (typeof window !== "undefined") return window.location.hostname
-        return ""
-    }, [])
+    const { hostname } = useEmbedHost()
 
-    if (!parent) return <div className="w-full h-full bg-slate-900 animate-pulse" />
+    if (!hostname) return <div className="w-full h-full bg-slate-900 animate-pulse" />
 
-    const src = `https://player.twitch.tv/?channel=${item.sourceId}&parent=${parent}&muted=${item.isMuted}&autoplay=true&quality=chunked`
+    const src = `https://player.twitch.tv/?channel=${item.sourceId}&parent=${hostname}&muted=${item.isMuted}&autoplay=true&quality=chunked`
 
     return (
         <iframe

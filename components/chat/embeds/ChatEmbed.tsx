@@ -1,8 +1,9 @@
 "use client"
 
-import { useMemo, memo } from "react"
+import { memo } from "react"
 import { type StreamItem } from "@/types/scene"
 import { useTheme } from "next-themes"
+import { useEmbedHost } from "@/lib/hooks/useEmbedHost"
 
 interface ChatEmbedProps {
     item: StreamItem
@@ -10,19 +11,15 @@ interface ChatEmbedProps {
 
 function ChatEmbedComponent({ item }: ChatEmbedProps) {
     const { resolvedTheme } = useTheme()
+    const { hostname } = useEmbedHost()
 
-    const parent = useMemo(() => {
-        if (typeof window !== "undefined") return window.location.hostname
-        return ""
-    }, [])
-
-    if (!parent) return <div className="w-full h-full bg-slate-900 animate-pulse" />
+    if (!hostname) return <div className="w-full h-full bg-slate-900 animate-pulse" />
 
     const isDark = resolvedTheme === 'dark'
 
     switch (item.platform) {
         case 'twitch':
-            const twitchSrc = `https://www.twitch.tv/embed/${item.sourceId}/chat?parent=${parent}${isDark ? '&darkpopout' : ''}`
+            const twitchSrc = `https://www.twitch.tv/embed/${item.sourceId}/chat?parent=${hostname}${isDark ? '&darkpopout' : ''}`
             return (
                 <iframe
                     key={`twitch-${item.sourceId}-${resolvedTheme}`}
@@ -43,7 +40,7 @@ function ChatEmbedComponent({ item }: ChatEmbedProps) {
             )
 
         case 'youtube':
-            const ytSrc = `https://www.youtube.com/live_chat?v=${item.sourceId}&embed_domain=${parent}${isDark ? '&dark_theme=1' : ''}`
+            const ytSrc = `https://www.youtube.com/live_chat?v=${item.sourceId}&embed_domain=${hostname}${isDark ? '&dark_theme=1' : ''}`
             return (
                 <iframe
                     key={`yt-${item.sourceId}-${resolvedTheme}`}

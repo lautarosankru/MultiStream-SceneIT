@@ -1,5 +1,6 @@
 "use client"
 
+import { useCallback } from "react"
 import { useSceneStore } from "@/store/useSceneStore"
 import { Button } from "@/components/ui/button"
 import { LayoutGrid, Sparkles, Hand } from "lucide-react"
@@ -8,20 +9,20 @@ import { cn } from "@/lib/utils"
 export function LayoutModeToggle() {
     const { layoutMode, setLayoutMode, spotlightLayout, autoLayout } = useSceneStore()
 
-    const handleAutoClick = () => {
+    const handleAutoClick = useCallback(() => {
         setLayoutMode('auto')
         autoLayout()
-    }
+    }, [setLayoutMode, autoLayout])
 
-    const handleSpotlightClick = () => {
+    const handleSpotlightClick = useCallback(() => {
         setLayoutMode('spotlight')
         spotlightLayout()
-    }
+    }, [setLayoutMode, spotlightLayout])
 
-    const handleCustomClick = () => {
+    const handleCustomClick = useCallback(() => {
         setLayoutMode('custom')
         // Custom mode doesn't auto-arrange - user can drag/resize manually
-    }
+    }, [setLayoutMode])
 
     return (
         <div className="flex items-center gap-1 p-1 rounded-full bg-white/30 dark:bg-black/30 backdrop-blur-sm border border-white/40 shadow-inner">

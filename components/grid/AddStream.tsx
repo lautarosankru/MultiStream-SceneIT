@@ -1,6 +1,6 @@
 "use client"
 
-import { useState } from "react"
+import { useState, useCallback } from "react"
 import { useSceneStore } from "@/store/useSceneStore"
 import { Input } from "@/components/ui/input"
 import { Button } from "@/components/ui/button"
@@ -11,7 +11,7 @@ export function AddStream() {
     const [url, setUrl] = useState("")
     const addItem = useSceneStore((state) => state.addItem)
 
-    const handleSubmit = (e: React.FormEvent) => {
+    const handleSubmit = useCallback((e: React.FormEvent) => {
         e.preventDefault()
         if (!url.trim()) return
 
@@ -20,7 +20,7 @@ export function AddStream() {
             description: url
         })
         setUrl("")
-    }
+    }, [url, addItem])
 
     return (
         <form onSubmit={handleSubmit} className="flex gap-2 w-full max-w-md">
