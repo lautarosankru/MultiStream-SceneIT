@@ -21,10 +21,10 @@ export function Header() {
         <header className="h-16 flex items-center justify-between px-4 lg:px-6 border-b border-white/50 dark:border-white/5 bg-gradient-to-b from-white/70 to-white/40 dark:from-black/80 dark:to-black/60 backdrop-blur-md shrink-0 z-50 shadow-sm relative">
             {/* Left: Branding */}
             <div className="flex items-center gap-2 w-auto lg:w-40 group cursor-default shrink-0">
-                <div className="h-9 w-9 rounded-xl bg-gradient-to-br from-cyan-400 to-lime-400 flex items-center justify-center shadow-lg group-hover:scale-105 transition-all duration-300 ring-2 ring-white/50">
+                <div className="h-9 w-9 rounded-xl bg-gradient-to-br from-cyan-400 to-lime-400 flex items-center justify-center shadow-lg group-hover:scale-105 transition-all duration-300 ring-2 ring-white/50 shrink-0">
                     <LayoutTemplate className="h-5 w-5 text-white" />
                 </div>
-                <span className="font-bold text-lg text-blue-900 dark:text-white tracking-tight drop-shadow-sm hidden sm:inline">
+                <span className="font-bold text-lg text-blue-900 dark:text-white tracking-tight drop-shadow-sm hidden sm:inline whitespace-nowrap">
                     Scene<span className="text-transparent bg-clip-text bg-gradient-to-r from-cyan-600 to-lime-600 dark:from-cyan-400 dark:to-lime-400 italic">It</span>
                 </span>
                 <div className="hidden sm:block">
@@ -40,14 +40,14 @@ export function Header() {
             {/* Right: Actions (Desktop) */}
             <div className="hidden md:flex items-center gap-1 lg:gap-2 w-auto lg:w-44 justify-end shrink-0">
                 <ShinyButton
-                    variant={!isLocked ? "default" : "ghost"}
+                    variant={!isLocked ? "default" : "glass"}
                     size="sm"
                     onClick={toggleLock}
                     className={cn(
-                        "transition-all duration-300",
+                        "transition-all duration-300 min-w-[90px]",
                         !isLocked
-                            ? "ring-2 ring-white/50"
-                            : "text-slate-600 hover:text-blue-900 hover:bg-white/40"
+                            ? "ring-2 ring-green-400 from-green-500 to-emerald-600 hover:brightness-110"
+                            : "hover:bg-white/20"
                     )}
                 >
                     <Edit2 className="h-4 w-4 mr-2" />
@@ -96,13 +96,18 @@ export function Header() {
 
                     <div className="grid grid-cols-2 gap-2">
                         <ShinyButton
-                            variant={!isLocked ? "default" : "outline"}
+                            variant={!isLocked ? "default" : "glass"}
                             size="sm"
                             onClick={() => {
                                 toggleLock()
                                 setIsMobileMenuOpen(false)
                             }}
-                            className="w-full justify-center"
+                            className={cn(
+                                "w-full justify-center transition-all duration-300",
+                                !isLocked
+                                    ? "ring-2 ring-green-400 from-green-500 to-emerald-600 hover:brightness-110"
+                                    : "bg-white/10 dark:bg-white/5 hover:bg-white/20"
+                            )}
                         >
                             <Edit2 className="h-4 w-4 mr-2" />
                             <span>{!isLocked ? "Listo" : "Editar Layout"}</span>

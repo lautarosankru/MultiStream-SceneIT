@@ -45,15 +45,9 @@ export const StreamWrapper = memo(function StreamWrapper({ item, style, classNam
                 "relative w-full h-full overflow-hidden group bg-black transition-all duration-300",
                 "rounded-[var(--radius)]",
                 // Edit Mode: High visibility, pulsing border
-                !isLocked && "ring-4 ring-primary/50 border-primary shadow-[0_0_30px_rgba(135,255,235,0.4)] animate-pulse",
-                // View Mode: Subtle, classy liquid border with Frutiger Aero gloss
-                isLocked && [
-                    "border border-white/10",
-                    "shadow-2xl shadow-black/50",
-                    "hover:border-white/30 hover:shadow-[0_0_25px_rgba(255,255,255,0.15)]",
-                    // Inner glow for depth
-                    "after:absolute after:inset-0 after:rounded-[var(--radius)] after:pointer-events-none after:shadow-[inset_0_0_20px_rgba(255,255,255,0.05)]"
-                ],
+                !isLocked && "ring-2 ring-primary border-primary animate-pulse",
+                // View Mode: Clean border, no glow
+                isLocked && "border border-white/10 hover:border-white/30",
                 className
             )}
             onMouseDown={onMouseDown}

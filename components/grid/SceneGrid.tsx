@@ -18,7 +18,7 @@ function getResizeHandleElement(
     const isCorner = handle.includes("w") || handle.includes("e");
     const cursorClass = {
         "s": "cursor-s-resize",
-        "n": "cursor-n-resize", 
+        "n": "cursor-n-resize",
         "e": "cursor-e-resize",
         "w": "cursor-w-resize",
         "se": "cursor-se-resize",
@@ -110,7 +110,7 @@ export function SceneGrid() {
 
     // In custom mode, NEVER auto-rearrange - preserve user's exact layout
     const itemsCountRef = useRef(items.length)
-    
+
     useEffect(() => {
         if (items.length === 0) return
 
@@ -118,7 +118,7 @@ export function SceneGrid() {
         if (itemsCountRef.current === items.length) {
             return
         }
-        
+
         itemsCountRef.current = items.length
 
         // Only apply auto-layout for auto/spotlight modes
@@ -148,7 +148,7 @@ export function SceneGrid() {
             minW: item.minW,
             minH: item.minH
         })).map(clampLayoutItem)
-        
+
         updateLayout(validatedLayout)
     }, [updateLayout])
 
@@ -173,7 +173,8 @@ export function SceneGrid() {
                 maxRows={GRID_CONFIG.MAX_ROWS}
                 // @ts-expect-error - draggableHandle is supported but types are outdated
                 draggableHandle=".drag-handle"
-                resizeHandle={(axis: ResizeHandle, ref: React.Ref<HTMLElement>) => 
+                resizeHandles={['s', 'w', 'e', 'n', 'sw', 'nw', 'se', 'ne']}
+                resizeHandle={(axis: ResizeHandle, ref: React.Ref<HTMLElement>) =>
                     getResizeHandleElement(axis, ref)
                 }
                 onDragStart={() => setDragging(true)}
