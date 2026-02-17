@@ -48,10 +48,23 @@ export function useViewerCount() {
       if (!response.ok) return
 
       const { results } = await response.json()
+      
+      if (!Array.isArray(results)) {
+        return
+      }
+      
       const newData: ViewerData = {}
 
       for (const result of results) {
-        if (result.valid && typeof result.viewerCount === 'number') {
+        if (
+          result && 
+          typeof result === 'object' &&
+          typeof result.valid === 'boolean' &&
+          result.valid &&
+          typeof result.username === 'string' &&
+          typeof result.viewerCount === 'number' &&
+          !isNaN(result.viewerCount)
+        ) {
           newData[result.username] = result.viewerCount
         }
       }

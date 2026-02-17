@@ -1,5 +1,5 @@
-import { useMemo, useCallback, useState, useEffect } from "react"
-import { Responsive, useContainerWidth } from "react-grid-layout"
+import { useMemo, useCallback, useState, useEffect, useRef } from "react"
+import { Responsive, useContainerWidth, type Layout } from "react-grid-layout"
 import { useSceneStore } from "@/store/useSceneStore"
 import { StreamWrapper } from "@/components/stream/StreamWrapper"
 import { cn } from "@/lib/utils"
@@ -63,8 +63,19 @@ export function SceneGrid() {
 
     // Validate layout only when items are added/removed
     // Don't interfere with manual resize in custom mode
+    const itemsCountRef = useRef(items.length)
+    const layoutModeRef = useRef(layoutMode)
+    
     useEffect(() => {
         if (items.length === 0) return
+
+        // Only trigger if item count changed (add/remove)
+        if (itemsCountRef.current === items.length && layoutModeRef.current === layoutMode) {
+            return
+        }
+        
+        itemsCountRef.current = items.length
+        layoutModeRef.current = layoutMode
 
         const hasInvalidItems = items.some(item => {
             const { x, y, w, h } = item.layout
@@ -95,7 +106,7 @@ export function SceneGrid() {
 
     // Handle layout changes - clamp only the item being resized, not all items
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    const onLayoutChange = useCallback((currentLayout: any) => {
+    const onLayoutChange = useCallback((currentLayout: Layout) => {
         // Only validate items that are being actively dragged/resized
         // We check which item has changed and clamp just that one
         const validatedLayout = currentLayout.map((item: {

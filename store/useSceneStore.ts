@@ -400,12 +400,13 @@ export const useSceneStore = create<SceneState>()(
             onRehydrateStorage: () => (state) => {
                 if (!state) return
 
-                // Validar y ajustar chatSidebarWidth si es inválido para el viewport actual
                 if (typeof window !== 'undefined') {
-                    const maxAllowed = window.innerWidth * 0.5 // Max 50% del viewport
+                    const maxAllowed = window.innerWidth * 0.5
                     const MAX_SIDEBAR_WIDTH = 800
-                    if (state.chatSidebarWidth > maxAllowed || state.chatSidebarWidth > MAX_SIDEBAR_WIDTH) {
-                        state.setChatSidebarWidth(Math.min(MAX_SIDEBAR_WIDTH, maxAllowed))
+                    const currentWidth = state.chatSidebarWidth
+                    if (currentWidth > maxAllowed || currentWidth > MAX_SIDEBAR_WIDTH) {
+                        const newWidth = Math.min(MAX_SIDEBAR_WIDTH, maxAllowed)
+                        state.setChatSidebarWidth(newWidth)
                     }
                 }
             }

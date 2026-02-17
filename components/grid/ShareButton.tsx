@@ -35,7 +35,7 @@ export function ShareButton() {
     }, [items])
 
     const handleShare = () => {
-        if (items.length === 0) {
+        if (typeof window === 'undefined' || items.length === 0) {
             toast.error("Agrega streams antes de compartir")
             return
         }
@@ -43,11 +43,8 @@ export function ShareButton() {
         let url: string
 
         if (friendlyUrl) {
-            // Friendly URL format: /kick/coscu/twitch/coker
-            // This goes through [...slug] which redirects to ?streamers=
             url = `${window.location.origin}${friendlyUrl}`
         } else {
-            // Fallback to compressed layout
             const layoutString = compressLayout(items)
             url = `${window.location.origin}?layout=${layoutString}`
         }

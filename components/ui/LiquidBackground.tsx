@@ -45,8 +45,6 @@ export function LiquidBackground() {
                 }}
             />
 
-            {/* Optional: Glossy Overlay Grid/Texture */}
-            <div className="absolute inset-0 bg-[url('/grid.svg')] opacity-[0.03] dark:opacity-[0.05]" />
             <div className="absolute inset-0 bg-gradient-to-b from-white/40 to-transparent dark:from-black/40 dark:to-transparent pointer-events-none transition-colors duration-700" />
         </div>
     )

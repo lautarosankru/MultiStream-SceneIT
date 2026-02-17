@@ -1,6 +1,6 @@
 "use client"
 
-import { useEffect, useState, Suspense } from "react"
+import { useEffect, useState, Suspense, useCallback, useRef } from "react"
 import { useSearchParams, usePathname } from "next/navigation"
 import { SceneGrid } from "@/components/grid/SceneGrid"
 import { AddStream } from "@/components/grid/AddStream"
@@ -24,107 +24,179 @@ function HomeContent() {
   const searchParams = useSearchParams()
   const pathname = usePathname()
   const layoutParam = searchParams.get("layout")
-  const usernamesParam = searchParams.get("s") // usernames: ?s=coscu,coker&p=kick,twitch
+  const usernamesParam = searchParams.get("s")
   const { setItems, items, isLocked, toggleLock, isSidebarOpen, toggleSidebar } = useSceneStore()
+  
   const [isLoaded, setIsLoaded] = useState(false)
   const [isLoadingStreamers, setIsLoadingStreamers] = useState(false)
   const [validationProgress, setValidationProgress] = useState<string | null>(null)
+  const loadingRef = useRef(false)
 
-  // Handle friendly URL (e.g., /coscu/coker/goncho) - DEPRECATED: use ?streamers= instead
-  useEffect(() => {
-    const loadFromFriendlyUrl = async () => {
-      // Skip if we have streamers param (new system)
-      if (usernamesParam) return
+  const loadFromFriendlyUrl = useCallback(async (pathSegments: string[]) => {
+    if (loadingRef.current) return
+    loadingRef.current = true
+    setIsLoadingStreamers(true)
 
-      // Parse path segments (skip empty and leading slash)
-      const pathSegments = pathname.split('/').filter((s: string) => s && s.length > 0)
+    try {
+      const parsedStreamers = parseSlugs(pathSegments)
 
-      if (pathSegments.length > 0 && !layoutParam && !isLoaded) {
-        setIsLoadingStreamers(true)
-
-        try {
-          const parsedStreamers = parseSlugs(pathSegments)
-
-          if (parsedStreamers.length === 0) {
-            setIsLoadingStreamers(false)
-            return
-          }
-
-          // Validate streamers via API
-          setValidationProgress(`Validando ${parsedStreamers.length} streamer(s)...`)
-
-          const response = await fetch('/api/streamers/batch', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({
-              streamers: parsedStreamers.map(s => ({ platform: s.platform, username: s.username }))
-            })
-          })
-
-          if (!response.ok) {
-            throw new Error('Validation failed')
-          }
-
-          const { results } = await response.json()
-          const validResults = results.filter((r: ValidationResult) => r.valid)
-
-
-          if (validResults.length === 0) {
-            toast.error("Ningún streamer encontrado")
-            setIsLoadingStreamers(false)
-            setValidationProgress(null)
-            return
-          }
-
-          // Report invalid streamers
-          const invalidResults = results.filter((r: ValidationResult) => !r.valid)
-          if (invalidResults.length > 0) {
-            invalidResults.forEach((r: ValidationResult) => {
-              toast.error(`"${r.username}" no encontrado en ${r.platform}`)
-            })
-          }
-
-          // Convert to StreamItems
-          const streamItems: StreamItem[] = validResults.map((result: ValidationResult, index: number) => {
-            const cols = Math.ceil(Math.sqrt(validResults.length))
-            const rows = Math.ceil(validResults.length / cols)
-
-            return {
-              id: `stream-${Date.now()}-${index}`,
-              type: 'video' as const,
-              platform: result.platform as 'kick' | 'twitch' | 'youtube',
-              sourceId: result.username,
-              isMuted: index !== 0, // Mute all except first
-              layout: {
-                i: `stream-${Date.now()}-${index}`,
-                x: (index % cols) * (12 / cols),
-                y: Math.floor(index / cols) * (12 / rows),
-                w: Math.floor(12 / cols),
-                h: Math.floor(12 / rows),
-                minW: 3,
-                minH: 3
-              }
-            }
-          })
-
-          // Clear existing items and set new ones
-          setItems(streamItems)
-          toast.success(`${validResults.length} stream(s) cargado(s)`)
-
-        } catch (error) {
-          console.error('[SceneIt] Error loading from friendly URL:', error)
-          toast.error("Error al cargar los streams")
-        } finally {
-          setIsLoadingStreamers(false)
-          setValidationProgress(null)
-        }
+      if (parsedStreamers.length === 0) {
+        setIsLoadingStreamers(false)
+        loadingRef.current = false
+        return
       }
+
+      setValidationProgress(`Validando ${parsedStreamers.length} streamer(s)...`)
+
+      const response = await fetch('/api/streamers/batch', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          streamers: parsedStreamers.map(s => ({ platform: s.platform, username: s.username }))
+        })
+      })
+
+      if (!response.ok) {
+        throw new Error('Validation failed')
+      }
+
+      const { results } = await response.json()
+      const validResults = Array.isArray(results) ? results.filter((r: ValidationResult) => r.valid) : []
+
+      if (validResults.length === 0) {
+        toast.error("Ningún streamer encontrado")
+        setValidationProgress(null)
+        loadingRef.current = false
+        return
+      }
+
+      const invalidResults = Array.isArray(results) ? results.filter((r: ValidationResult) => !r.valid) : []
+      if (invalidResults.length > 0) {
+        invalidResults.forEach((r: ValidationResult) => {
+          toast.error(`"${r.username}" no encontrado en ${r.platform}`)
+        })
+      }
+
+      const streamItems: StreamItem[] = validResults.map((result: ValidationResult, index: number) => {
+        const cols = Math.ceil(Math.sqrt(validResults.length))
+        const rows = Math.ceil(validResults.length / cols)
+
+        return {
+          id: `stream-${Date.now()}-${index}`,
+          type: 'video' as const,
+          platform: result.platform as 'kick' | 'twitch' | 'youtube',
+          sourceId: result.username,
+          isMuted: index !== 0,
+          layout: {
+            i: `stream-${Date.now()}-${index}`,
+            x: (index % cols) * (12 / cols),
+            y: Math.floor(index / cols) * (12 / rows),
+            w: Math.floor(12 / cols),
+            h: Math.floor(12 / rows),
+            minW: 3,
+            minH: 3
+          }
+        }
+      })
+
+      setItems(streamItems)
+      toast.success(`${validResults.length} stream(s) cargado(s)`)
+
+    } catch (error) {
+      console.error('[SceneIt] Error loading from friendly URL:', error)
+      toast.error("Error al cargar los streams")
+    } finally {
+      setIsLoadingStreamers(false)
+      setValidationProgress(null)
+      loadingRef.current = false
     }
+  }, [setItems])
 
-    loadFromFriendlyUrl()
-  }, [pathname, layoutParam, setItems, isLoaded])
+  const loadFromStreamersParam = useCallback(async () => {
+    if (!usernamesParam || loadingRef.current) return
+    loadingRef.current = true
+    setIsLoadingStreamers(true)
 
-  // Handle Import from URL (compressed layout)
+    try {
+      const usernames = usernamesParam.split(',').filter((s: string) => s.length > 0)
+      const platformParam = searchParams.get("p")
+      const platforms = platformParam ? platformParam.split(',').filter((s: string) => s.length > 0) : []
+
+      if (usernames.length === 0) {
+        setIsLoadingStreamers(false)
+        loadingRef.current = false
+        return
+      }
+
+      setValidationProgress(`Validando ${usernames.length} streamer(s)...`)
+
+      const streamersToValidate = usernames.map((username: string, index: number) => ({
+        platform: platforms[index] || 'kick',
+        username
+      }))
+
+      const response = await fetch('/api/streamers/batch', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ streamers: streamersToValidate })
+      })
+
+      if (!response.ok) {
+        throw new Error('Validation failed')
+      }
+
+      const { results } = await response.json()
+      const validResults = Array.isArray(results) ? results.filter((r: ValidationResult) => r.valid) : []
+
+      if (validResults.length === 0) {
+        toast.error("Ningún streamer encontrado")
+        setValidationProgress(null)
+        loadingRef.current = false
+        return
+      }
+
+      const invalidResults = Array.isArray(results) ? results.filter((r: ValidationResult) => !r.valid) : []
+      if (invalidResults.length > 0) {
+        invalidResults.forEach((r: ValidationResult) => {
+          toast.error(`"${r.username}" no encontrado en ${r.platform}`)
+        })
+      }
+
+      const streamItems: StreamItem[] = validResults.map((result: ValidationResult, index: number) => {
+        const cols = Math.ceil(Math.sqrt(validResults.length))
+        const rows = Math.ceil(validResults.length / cols)
+
+        return {
+          id: `stream-${Date.now()}-${index}`,
+          type: 'video' as const,
+          platform: result.platform as 'kick' | 'twitch' | 'youtube',
+          sourceId: result.username,
+          isMuted: index !== 0,
+          layout: {
+            i: `stream-${Date.now()}-${index}`,
+            x: (index % cols) * (12 / cols),
+            y: Math.floor(index / cols) * (12 / rows),
+            w: Math.floor(12 / cols),
+            h: Math.floor(12 / rows),
+            minW: 3,
+            minH: 3
+          }
+        }
+      })
+
+      setItems(streamItems)
+      toast.success(`${validResults.length} stream(s) cargado(s)`)
+
+    } catch (error) {
+      console.error('[SceneIt] Error loading from streamers param:', error)
+      toast.error("Error al cargar los streams")
+    } finally {
+      setIsLoadingStreamers(false)
+      setValidationProgress(null)
+      loadingRef.current = false
+    }
+  }, [usernamesParam, searchParams, setItems])
+
   useEffect(() => {
     if (layoutParam && !isLoaded) {
       try {
@@ -137,105 +209,22 @@ function HomeContent() {
         console.error("Failed to decompress")
       }
       setIsLoaded(true)
-    } else if (!layoutParam) {
+    } else if (!layoutParam && !isLoaded) {
       setIsLoaded(true)
     }
   }, [layoutParam, setItems, isLoaded])
 
-  // Handle ?s=coscu,coker&p=kick,twitch (from [...slug] friendly URLs)
   useEffect(() => {
-    const loadFromStreamersParam = async () => {
-      if (!usernamesParam || isLoaded) return
+    if (!isLoaded || loadingRef.current) return
 
-      setIsLoadingStreamers(true)
-
-      try {
-        const usernames = usernamesParam.split(',').filter((s: string) => s.length > 0)
-
-        // Get platforms from &p= param
-        const platformParam = searchParams.get("p")
-        const platforms = platformParam ? platformParam.split(',').filter((s: string) => s.length > 0) : []
-
-
-        if (usernames.length === 0) {
-          setIsLoadingStreamers(false)
-          return
-        }
-
-        setValidationProgress(`Validando ${usernames.length} streamer(s)...`)
-
-        // Build streamers array with explicit platforms
-        const streamersToValidate = usernames.map((username: string, index: number) => ({
-          platform: platforms[index] || 'kick', // Default to kick if no platform specified
-          username
-        }))
-
-
-        const response = await fetch('/api/streamers/batch', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ streamers: streamersToValidate })
-        })
-
-        if (!response.ok) {
-          throw new Error('Validation failed')
-        }
-
-        const { results } = await response.json()
-        const validResults = results.filter((r: ValidationResult) => r.valid)
-
-
-        if (validResults.length === 0) {
-          toast.error("Ningún streamer encontrado")
-          setIsLoadingStreamers(false)
-          setValidationProgress(null)
-          return
-        }
-
-        const invalidResults = results.filter((r: ValidationResult) => !r.valid)
-        if (invalidResults.length > 0) {
-          invalidResults.forEach((r: ValidationResult) => {
-            toast.error(`"${r.username}" no encontrado en ${r.platform}`)
-          })
-        }
-
-        const streamItems: StreamItem[] = validResults.map((result: ValidationResult, index: number) => {
-          const cols = Math.ceil(Math.sqrt(validResults.length))
-          const rows = Math.ceil(validResults.length / cols)
-
-          return {
-            id: `stream-${Date.now()}-${index}`,
-            type: 'video' as const,
-            platform: result.platform as 'kick' | 'twitch' | 'youtube',
-            sourceId: result.username,
-            isMuted: index !== 0,
-            layout: {
-              i: `stream-${Date.now()}-${index}`,
-              x: (index % cols) * (12 / cols),
-              y: Math.floor(index / cols) * (12 / rows),
-              w: Math.floor(12 / cols),
-              h: Math.floor(12 / rows),
-              minW: 3,
-              minH: 3
-            }
-          }
-        })
-
-        // Set new items (replaces existing items)
-        setItems(streamItems)
-        toast.success(`${validResults.length} stream(s) cargado(s)`)
-
-      } catch (error) {
-        console.error('[SceneIt] Error loading from streamers param:', error)
-        toast.error("Error al cargar los streams")
-      } finally {
-        setIsLoadingStreamers(false)
-        setValidationProgress(null)
-      }
+    const pathSegments = pathname.split('/').filter((s: string) => s && s.length > 0)
+    
+    if (pathSegments.length > 0 && !usernamesParam) {
+      loadFromFriendlyUrl(pathSegments)
+    } else if (usernamesParam) {
+      loadFromStreamersParam()
     }
-
-    loadFromStreamersParam()
-  }, [usernamesParam, isLoaded, setItems, searchParams])
+  }, [pathname, layoutParam, usernamesParam, isLoaded, loadFromFriendlyUrl, loadFromStreamersParam])
 
   return (
     <main className="h-screen w-full bg-background text-foreground flex flex-col overflow-hidden font-sans antialiased selection:bg-primary/30">
