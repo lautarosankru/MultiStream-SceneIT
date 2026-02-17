@@ -20,7 +20,7 @@ interface StreamWrapperProps {
 
 export const StreamWrapper = memo(function StreamWrapper({ item, style, className, onMouseDown, onMouseUp, onTouchEnd, ...props }: StreamWrapperProps) {
     const { isLocked, isDragging, layoutMode, mainStreamId, setMainStream } = useSceneStore()
-    
+
     const isMain = layoutMode === 'spotlight' && mainStreamId === item.id
 
     // Determine which embed to render
@@ -42,12 +42,18 @@ export const StreamWrapper = memo(function StreamWrapper({ item, style, classNam
         <div
             style={style}
             className={cn(
-                "relative w-full h-full overflow-hidden group bg-black shadow-2xl transition-all duration-300",
-                "glass rounded-[var(--radius)]",
-                // Highlight border in edit mode with Frutiger Glow
-                !isLocked && "ring-4 ring-primary/30 border-primary shadow-[0_0_40px_rgba(135,255,235,0.3)] animate-pulse",
-                // Default state: Subtle liquid border
-                isLocked && "border border-white/10 hover:border-white/40 hover:shadow-[0_0_20px_rgba(255,255,255,0.1)]",
+                "relative w-full h-full overflow-hidden group bg-black transition-all duration-300",
+                "rounded-[var(--radius)]",
+                // Edit Mode: High visibility, pulsing border
+                !isLocked && "ring-4 ring-primary/50 border-primary shadow-[0_0_30px_rgba(135,255,235,0.4)] animate-pulse",
+                // View Mode: Subtle, classy liquid border with Frutiger Aero gloss
+                isLocked && [
+                    "border border-white/10",
+                    "shadow-2xl shadow-black/50",
+                    "hover:border-white/30 hover:shadow-[0_0_25px_rgba(255,255,255,0.15)]",
+                    // Inner glow for depth
+                    "after:absolute after:inset-0 after:rounded-[var(--radius)] after:pointer-events-none after:shadow-[inset_0_0_20px_rgba(255,255,255,0.05)]"
+                ],
                 className
             )}
             onMouseDown={onMouseDown}
@@ -60,12 +66,12 @@ export const StreamWrapper = memo(function StreamWrapper({ item, style, classNam
 
             {/* MAIN Indicator for Spotlight Mode */}
             {layoutMode === 'spotlight' && (
-                <div 
+                <div
                     className={cn(
-                        "absolute top-2 left-2 z-50 px-2 py-1 rounded-md text-xs font-bold transition-all duration-300 cursor-pointer",
-                        isMain 
-                            ? "bg-amber-500 text-white shadow-lg scale-100" 
-                            : "bg-black/50 text-white/70 opacity-0 group-hover:opacity-100 hover:bg-amber-500/70 hover:text-white"
+                        "absolute top-2 left-2 z-50 px-3 py-1 rounded-full text-xs font-bold transition-all duration-300 cursor-pointer backdrop-blur-md border border-white/10",
+                        isMain
+                            ? "bg-amber-500 text-white shadow-[0_0_15px_rgba(245,158,11,0.6)] scale-100"
+                            : "bg-black/60 text-white/70 opacity-0 group-hover:opacity-100 hover:bg-amber-500/80 hover:text-white"
                     )}
                     onClick={(e) => {
                         e.stopPropagation();
@@ -80,7 +86,7 @@ export const StreamWrapper = memo(function StreamWrapper({ item, style, classNam
             <StreamOverlay isLocked={isLocked} isDragging={isDragging} />
 
             {/* Content Layer */}
-            <div className="w-full h-full relative z-0">
+            <div className="w-full h-full relative z-0 bg-black">
                 {renderEmbed()}
             </div>
         </div>
