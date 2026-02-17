@@ -27,6 +27,6 @@ export default async function SlugPage({ params }: { params: Promise<{ slug: str
     redirect('/')
   }
   
-  const redirectUrl = `/?s=${streamers.join(',')}&p=${platforms.join(',')}`
+  const redirectUrl = `/?s=${streamers.join(',')}&p=${platforms.join(',')}&layoutMode=auto`
   redirect(redirectUrl)
 }

@@ -237,6 +237,9 @@ export const useSceneStore = create<SceneState>()(
                     if (!mainStreamId && items.length > 0) {
                         set({ mainStreamId: items[0].id })
                     }
+                    get().spotlightLayout()
+                } else if (mode === 'auto') {
+                    get().autoLayout()
                 }
             },
 

@@ -25,8 +25,9 @@ function HomeContent() {
   const searchParams = useSearchParams()
   const pathname = usePathname()
   const layoutParam = searchParams.get("layout")
+  const layoutModeParam = searchParams.get("layoutMode")
   const usernamesParam = searchParams.get("s")
-  const { setItems, items, isLocked, toggleLock, isSidebarOpen, toggleSidebar } = useSceneStore()
+  const { setItems, items, isLocked, toggleLock, isSidebarOpen, toggleSidebar, setLayoutMode } = useSceneStore()
   
   const [isLoaded, setIsLoaded] = useState(false)
   const [isLoadingStreamers, setIsLoadingStreamers] = useState(false)
@@ -111,7 +112,7 @@ function HomeContent() {
     const streamers = parsedStreamers.map(s => s.username)
     const platforms = parsedStreamers.map(s => s.platform)
     
-    const redirectUrl = `/?s=${streamers.join(',')}&p=${platforms.join(',')}`
+    const redirectUrl = `/?s=${streamers.join(',')}&p=${platforms.join(',')}&layoutMode=auto`
     window.location.href = redirectUrl
   }, [])
 
@@ -130,7 +131,11 @@ function HomeContent() {
     }))
 
     await processStreamers(streamersToValidate)
-  }, [usernamesParam, searchParams, processStreamers])
+
+    if (layoutModeParam === 'auto') {
+      setLayoutMode('auto')
+    }
+  }, [usernamesParam, searchParams, processStreamers, layoutModeParam, setLayoutMode])
 
   useEffect(() => {
     if (layoutParam && !isLoaded) {
