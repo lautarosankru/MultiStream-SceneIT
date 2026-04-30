@@ -43,3 +43,7 @@ next-env.d.ts
 # local databases
 *.db
 *.sqlite
+
+# agents and local ai
+.agent/
+.gemini/
