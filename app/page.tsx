@@ -1,7 +1,7 @@
 "use client"
 
 import { useEffect, useState, Suspense, useCallback, useRef } from "react"
-import { useSearchParams, usePathname } from "next/navigation"
+import { useSearchParams, usePathname, useRouter } from "next/navigation"
 import { SceneGrid } from "@/components/grid/SceneGrid"
 import { ChatSidebar } from "@/components/chat/ChatSidebar"
 import { useSceneStore } from "@/store/useSceneStore"
@@ -23,10 +23,11 @@ function HomeContent() {
   const usernamesParam = searchParams.get("s")
   const { setItems, items, setLayoutMode } = useSceneStore()
 
-  const [isLoaded, setIsLoaded] = useState(false)
+  const router = useRouter()
   const [isLoadingStreamers, setIsLoadingStreamers] = useState(false)
   const [validationProgress, setValidationProgress] = useState<string | null>(null)
   const loadingRef = useRef(false)
+  const initializedRef = useRef(false)
 
   const processStreamers = useCallback(async (parsedStreamers: { platform: string; username: string }[]) => {
     if (loadingRef.current || parsedStreamers.length === 0) return
@@ -99,7 +100,7 @@ function HomeContent() {
     }
   }, [setItems])
 
-  const loadFromFriendlyUrl = useCallback(async (pathSegments: string[]) => {
+  const loadFromFriendlyUrl = useCallback((pathSegments: string[]) => {
     const parsedStreamers = parseSlugs(pathSegments)
     if (parsedStreamers.length === 0) return
 
@@ -107,8 +108,8 @@ function HomeContent() {
     const platforms = parsedStreamers.map(s => s.platform)
 
     const redirectUrl = `/?s=${streamers.join(',')}&p=${platforms.join(',')}&layoutMode=auto`
-    window.location.href = redirectUrl
-  }, [])
+    router.replace(redirectUrl)
+  }, [router])
 
   const loadFromStreamersParam = useCallback(async () => {
     if (!usernamesParam || loadingRef.current) return
@@ -132,7 +133,10 @@ function HomeContent() {
   }, [usernamesParam, searchParams, processStreamers, layoutModeParam, setLayoutMode])
 
   useEffect(() => {
-    if (layoutParam && !isLoaded) {
+    if (initializedRef.current) return
+    initializedRef.current = true
+
+    if (layoutParam) {
       try {
         const importedItems = decompressLayout(layoutParam)
         if (importedItems && importedItems.length > 0) {
@@ -143,23 +147,20 @@ function HomeContent() {
         const errorMessage = error instanceof Error ? error.message : 'Unknown error'
         console.error('[SceneIt] Failed to decompress layout:', errorMessage)
       }
-      setIsLoaded(true)
-    } else if (!layoutParam && !isLoaded) {
-      setIsLoaded(true)
+      return
     }
-  }, [layoutParam, setItems, isLoaded])
-
-  useEffect(() => {
-    if (!isLoaded || loadingRef.current) return
 
     const pathSegments = pathname.split('/').filter((s: string) => s && s.length > 0)
 
     if (pathSegments.length > 0 && !usernamesParam) {
       loadFromFriendlyUrl(pathSegments)
     } else if (usernamesParam) {
-      loadFromStreamersParam()
+      const timer = setTimeout(() => {
+        void loadFromStreamersParam()
+      }, 0)
+      return () => clearTimeout(timer)
     }
-  }, [pathname, layoutParam, usernamesParam, isLoaded, loadFromFriendlyUrl, loadFromStreamersParam])
+  }, [pathname, layoutParam, usernamesParam, setItems, loadFromFriendlyUrl, loadFromStreamersParam])
 
   return (
     <main className="h-screen w-full bg-background text-foreground flex flex-col overflow-hidden font-sans antialiased selection:bg-primary/30">

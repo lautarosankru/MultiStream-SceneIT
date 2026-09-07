@@ -19,7 +19,9 @@ export function useViewerCount() {
   const isMountedRef = useRef(true)
   
   // Keep ref updated with latest items
-  itemsRef.current = items
+  useEffect(() => {
+    itemsRef.current = items
+  }, [items])
 
   const fetchViewerCounts = useCallback(async () => {
     // Only fetch for Kick streams (only platform with viewer count support)
@@ -93,7 +95,9 @@ export function useViewerCount() {
   // Fetch on mount and when items change, then poll
   useEffect(() => {
     isMountedRef.current = true
-    fetchViewerCounts()
+    const timeoutId = setTimeout(() => {
+      fetchViewerCounts()
+    }, 0)
 
     // Clear previous interval
     if (intervalRef.current) {
@@ -104,6 +108,7 @@ export function useViewerCount() {
 
     return () => {
       isMountedRef.current = false
+      clearTimeout(timeoutId)
       if (intervalRef.current) {
         clearInterval(intervalRef.current)
         intervalRef.current = null

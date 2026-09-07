@@ -34,6 +34,7 @@ export function useResizable({
     onResizeEnd
 }: UseResizableOptions): UseResizableReturn {
     const [width, setWidth] = useState(initialWidth)
+    const [prevInitialWidth, setPrevInitialWidth] = useState(initialWidth)
     const [isDragging, setIsDragging] = useState(false)
     const startXRef = useRef(0)
     const startWidthRef = useRef(initialWidth)
@@ -42,21 +43,20 @@ export function useResizable({
     const onResizeEndRef = useRef(onResizeEnd)
     const onResizeStartRef = useRef(onResizeStart)
 
+    if (initialWidth !== prevInitialWidth) {
+        setPrevInitialWidth(initialWidth)
+        if (!isDragging) {
+            setWidth(initialWidth)
+        }
+    }
+
     // Keep refs updated
     useEffect(() => {
+        currentWidthRef.current = width
         onResizeRef.current = onResize
         onResizeEndRef.current = onResizeEnd
         onResizeStartRef.current = onResizeStart
-    }, [onResize, onResizeEnd, onResizeStart])
-
-    // Initialize after mount and sync with external changes
-    useEffect(() => {
-        if (initialWidth !== width && !isDragging) {
-            setWidth(initialWidth)
-            currentWidthRef.current = initialWidth
-        }
-        // eslint-disable-next-line react-hooks/exhaustive-deps
-    }, [initialWidth, isDragging])
+    }, [width, onResize, onResizeEnd, onResizeStart])
 
     const handleMouseDown = useCallback((e: React.MouseEvent) => {
         e.preventDefault()

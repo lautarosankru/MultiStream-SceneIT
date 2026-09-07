@@ -9,6 +9,7 @@ export function useKickChat(channelSlug: string) {
     const abortControllerRef = useRef<AbortController | null>(null);
     const reconnectAttemptsRef = useRef(0);
     const reconnectTimeoutRef = useRef<NodeJS.Timeout | null>(null);
+    const connectRef = useRef<() => void>(() => {});
 
     const connect = useCallback(async () => {
         setStatus('connecting');
@@ -81,7 +82,7 @@ export function useKickChat(channelSlug: string) {
                     const delay = CHAT_RECONNECT_DELAY_MS * Math.pow(2, reconnectAttemptsRef.current - 1);
 
                     reconnectTimeoutRef.current = setTimeout(() => {
-                        connect();
+                        connectRef.current();
                     }, delay);
                 }
             };
@@ -93,6 +94,10 @@ export function useKickChat(channelSlug: string) {
             }
         }
     }, [channelSlug]);
+
+    useEffect(() => {
+        connectRef.current = connect;
+    }, [connect]);
 
     useEffect(() => {
         // Cleanup function
@@ -115,8 +120,13 @@ export function useKickChat(channelSlug: string) {
         }
 
         if (channelSlug) {
-            cleanup();
-            connect();
+            const timer = setTimeout(() => {
+                connect();
+            }, 0);
+            return () => {
+                clearTimeout(timer);
+                cleanup();
+            };
         }
 
         return cleanup;
